@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>マルチメディア一括変換ツール v2.0</title>
+    <title>マルチメディア一括変換ツール v2.1 (EDIUS Rescue)</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     
     <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
@@ -16,7 +16,7 @@
         body { background-color: #f0f2f5; padding-top: 2rem; font-family: "Helvetica Neue", Arial, sans-serif; }
         .main-container { max-width: 900px; margin: 0 auto; background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.12); }
         
-        /* タブデザイン */
+        /* タブデザイン (ボタン風) */
         .nav-pills .nav-link {
             background-color: #f1f3f5; color: #495057; font-weight: bold;
             border-radius: 50px; padding: 12px 20px; margin: 0 5px;
@@ -56,8 +56,8 @@
 <body>
 
 <div class="main-container">
-    <h3 class="mb-2 text-center fw-bold text-dark">マルチメディア一括変換ツール v2.0</h3>
-    <div class="env-warning">推奨: Google Chrome / Microsoft Edge (※Safariは動作が不安定な場合があります)</div>
+    <h3 class="mb-2 text-center fw-bold text-dark">マルチメディア一括変換ツール v2.1</h3>
+    <div class="env-warning">推奨: Google Chrome / Microsoft Edge (※Safariは長尺処理に不向きです)</div>
 
     <ul class="nav nav-pills nav-fill my-4" id="myTab" role="tablist">
         <li class="nav-item">
@@ -77,7 +77,7 @@
             <div class="mb-3">
                 <label class="form-label fw-bold">1. ファイル選択 (複数OK)</label>
                 <input type="file" class="form-control" id="video-uploader" multiple>
-                <div class="form-text">CtrlキーやShiftキーで複数選択可</div>
+                <div class="form-text">CtrlキーやShiftキーで複数選択可。フォルダからドラッグ＆ドロップもOK。</div>
             </div>
 
             <label class="form-label fw-bold">2. 変換モード</label>
@@ -109,8 +109,8 @@
             </div>
             
             <div id="desc-rewrap" class="description-box"><strong>⚡ コンテナ変換:</strong> 画質そのまま、箱だけMP4に入れ替え。爆速。mkv/mov等に。</div>
-            <div id="desc-cfr" class="description-box"><strong>🔄 フレームレート固定:</strong> スマホ動画の音ズレ防止用 (29.97fps化)。時間かかります。</div>
-            <div id="desc-reencode" class="description-box"><strong>🛠️ MP4再エンコード:</strong> 特殊形式を汎用MP4に作り直し。時間かかります。</div>
+            <div id="desc-cfr" class="description-box"><strong>🔄 フレームレート固定 (救済モード):</strong> スマホ動画の音ズレや、防犯カメラ映像を<strong>EDIUSで確実に読み込める形式</strong>に変換します。</div>
+            <div id="desc-reencode" class="description-box"><strong>🛠️ MP4再エンコード (救済モード):</strong> 特殊形式を汎用MP4に作り直します。CFRモードと同じ強力な補正がかかります。</div>
 
             <button id="video-convert-btn" class="btn btn-primary w-100 mt-4 py-2 fw-bold" disabled><span id="btn-text">エンジンロード中...</span></button>
             
@@ -170,14 +170,16 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    // --- 共通ユーティリティ ---
-    let objectUrls = []; // メモリ解放用リスト
+    // --- 共通ユーティリティ: メモリ管理 ---
+    let objectUrls = []; 
 
     function cleanUpObjectUrls() {
+        // Blob URLを解放してメモリリークを防ぐ
         objectUrls.forEach(url => URL.revokeObjectURL(url));
         objectUrls = [];
     }
 
+    // --- UI操作: 結果行の追加 ---
     function addResultRow(containerId, fileName, statusText, statusClass, rowId) {
         const container = document.getElementById(containerId);
         if(container.querySelector('.text-muted')) container.innerHTML = ''; // 初回クリア
@@ -212,9 +214,8 @@
         // ログを有効化（進捗計算用）
         ffmpeg = createFFmpeg({ log: true });
 
-        // 進捗コールバックの設定
+        // 進捗コールバック
         ffmpeg.setProgress(({ ratio }) => {
-            // ratioは 0.0 ~ 1.0 (ただし時々1を超えることがあるのでclampする)
             if (window.currentProcessingRowId) {
                 const percent = Math.min(Math.max(Math.round(ratio * 100), 0), 100);
                 const badge = document.getElementById(`${window.currentProcessingRowId}-status`);
@@ -238,6 +239,7 @@
         document.getElementById('desc-' + mode).style.display = 'block';
     }
 
+    // --- 動画一括変換処理 (v2.1 EDIUS Rescue対応) ---
     document.getElementById('video-convert-btn').addEventListener('click', async () => {
         const fileInput = document.getElementById('video-uploader');
         const mode = document.querySelector('input[name="videoMode"]:checked');
@@ -248,14 +250,14 @@
         if (!mode) { alert('モードを選択してください'); return; }
 
         btn.disabled = true;
-        zipArea.style.display = 'none'; // ZIPボタン隠す
+        zipArea.style.display = 'none';
         document.getElementById('video-result-list').innerHTML = '';
-        cleanUpObjectUrls(); // 前回のURL解放
+        cleanUpObjectUrls();
 
-        currentZip = new JSZip(); // 新しいZIP作成
+        currentZip = new JSZip(); // ZIP作成開始
         const files = Array.from(fileInput.files);
         
-        // リスト作成
+        // 先にリストだけ作る
         files.forEach((file, i) => addResultRow('video-result-list', file.name, '待機中', 'status-waiting', `v-row-${i}`));
 
         for (let i = 0; i < files.length; i++) {
@@ -264,48 +266,85 @@
             const inputName = `in_${i}`;
             const outputName = `out_${i}.mp4`;
             
-            window.currentProcessingRowId = rowId; // 進捗表示用IDセット
+            window.currentProcessingRowId = rowId; // 進捗表示対象を設定
             updateResultRow(rowId, '準備中...', 'status-processing');
 
             try {
                 ffmpeg.FS('writeFile', inputName, await fetchFile(file));
                 let command = [];
-                if (mode.value === 'rewrap') command = ['-i', inputName, '-c', 'copy', outputName];
-                else if (mode.value === 'cfr') command = ['-i', inputName, '-r', '30000/1001', '-c:v', 'libx264', '-preset', 'ultrafast', '-c:a', 'aac', outputName];
-                else command = ['-i', inputName, '-c:v', 'libx264', '-preset', 'ultrafast', '-c:a', 'aac', outputName];
+
+                if (mode.value === 'rewrap') {
+                    // [Rewrap] コンテナ変換 (劣化なし)
+                    // genptsを入れて安全性を高める
+                    command = [
+                        '-fflags', '+genpts', 
+                        '-i', inputName, 
+                        '-c', 'copy', 
+                        '-map', '0', 
+                        '-ignore_unknown', 
+                        outputName
+                    ];
+                } else {
+                    // [CFR] & [Re-encode] 共通：EDIUS互換・最強救済コマンド
+                    // 防犯カメラ、ドラレコ、スマホVFRなど、あらゆる「編集ソフトで読めない」を解決する設定
+                    command = [
+                        '-fflags', '+genpts',       // 壊れたタイムスタンプを修復
+                        '-analyzeduration', '100M', // 解析時間を長く取る
+                        '-probesize', '100M',       // 解析サイズを大きく取る
+                        '-i', inputName,
+                        
+                        // ストリームマッピング (?=存在しなくてもエラーにしない)
+                        '-map', '0:v:0?',           
+                        '-map', '0:a:0?',           // 音声なしファイル対策
+                        
+                        // 映像設定 (EDIUS安定化)
+                        '-r', '30000/1001',         // 29.97fps固定
+                        '-pix_fmt', 'yuv420p',      // 色空間強制 (緑画面防止)
+                        '-c:v', 'libx264',          
+                        '-preset', 'ultrafast',     // 速度優先
+                        '-profile:v', 'high',       
+                        
+                        // 音声設定
+                        '-c:a', 'aac',
+                        '-ar', '48000',             // 48kHz
+                        
+                        outputName
+                    ];
+                }
 
                 await ffmpeg.run(...command);
                 
-                const data = ffmpeg.FS('readFile', outputName);
-                
-                // ZIPに追加
-                const newFileName = `converted_${file.name.replace(/\.[^/.]+$/, "")}.mp4`;
-                currentZip.file(newFileName, data);
-                
-                updateResultRow(rowId, '完了', 'status-success');
+                try {
+                    const data = ffmpeg.FS('readFile', outputName);
+                    // ZIPに追加
+                    const newFileName = `converted_${file.name.replace(/\.[^/.]+$/, "")}.mp4`;
+                    currentZip.file(newFileName, data);
+                    updateResultRow(rowId, '完了', 'status-success');
+                } catch (readErr) {
+                    console.error(readErr);
+                    throw new Error("出力ファイル生成失敗");
+                }
 
-                // 重要：FSのゴミ掃除
+                // 【重要】メモリ解放 (FS unlink)
                 try { ffmpeg.FS('unlink', inputName); ffmpeg.FS('unlink', outputName); } catch(e){}
 
             } catch (err) {
                 console.error(err);
-                updateResultRow(rowId, 'エラー', 'status-error');
+                updateResultRow(rowId, 'エラー: 破損等の可能性', 'status-error');
             }
         }
         
         window.currentProcessingRowId = null;
         btn.disabled = false;
         
-        // ZIPボタン表示
+        // ZIP保存ボタン有効化
         zipArea.style.display = 'block';
-        
-        // ZIP保存ボタンのイベント
         document.getElementById('video-zip-btn').onclick = function() {
             currentZip.generateAsync({type:"blob"}).then(function(content) {
                 saveAs(content, "video_converted_batch.zip");
             });
         };
-        alert("すべての変換が完了しました。下部のボタンからZIPを保存できます。");
+        alert("すべての変換処理が完了しました。");
     });
 
     // --- 2. 写真変換 (HEIC -> JPG) ---
@@ -386,12 +425,13 @@
                     const rowId = `pdf-${i}-page-${pageNum}`;
                     const fileName = `${file.name} (P.${pageNum})`;
                     
-                    addResultRow('pdf-result-list', fileName, '処理中...', 'status-processing', rowId);
+                    addResultRow('pdf-result-list', fileName, 'レンダリング中...', 'status-processing', rowId);
 
-                    // UIフリーズ防止のための微小な休憩
+                    // フリーズ防止の休憩
                     await new Promise(r => setTimeout(r, 10));
 
                     const page = await pdf.getPage(pageNum);
+                    // 高画質設定: Scale 2.0
                     const viewport = page.getViewport({ scale: 2.0 });
                     
                     const canvas = document.createElement('canvas');
