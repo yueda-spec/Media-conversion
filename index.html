@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>マルチメディア一括変換ツール v7.0 (Smart Scan)</title>
+    <title>マルチメディア一括変換ツール v7.1 (Fix Scan)</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     
     <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
@@ -37,8 +37,8 @@
         .status-error { background: #f8d7da; color: #842029; }
         
         /* 警告バッジ */
-        .tag-warning { font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; background: #fff3cd; color: #856404; border: 1px solid #ffeeba; margin-left: 10px; }
-        .tag-danger { font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; background: #f8d7da; color: #842029; border: 1px solid #f5c6cb; margin-left: 10px; }
+        .tag-warning { font-size: 0.75rem; padding: 3px 8px; border-radius: 4px; background: #fff3cd; color: #856404; border: 1px solid #ffeeba; margin-left: 10px; font-weight: bold; }
+        .tag-danger { font-size: 0.75rem; padding: 3px 8px; border-radius: 4px; background: #f8d7da; color: #842029; border: 1px solid #f5c6cb; margin-left: 10px; font-weight: bold; }
         
         .save-area { display: none; padding: 15px; background: #e0e7ff; border-top: 1px solid #c7d2fe; text-align: center; }
         .description-box { background-color: #fff3cd; border: 1px solid #ffecb5; padding: 15px; border-radius: 8px; margin-top: 15px; display: none; color: #664d03; }
@@ -49,11 +49,11 @@
 <body>
 
 <div class="main-container">
-    <h3 class="mb-3 text-center fw-bold text-dark">マルチメディア一括変換ツール v7.0</h3>
+    <h3 class="mb-3 text-center fw-bold text-dark">マルチメディア一括変換ツール v7.1</h3>
     
     <div class="alert alert-light border shadow-sm small">
-        <strong>⚡ 新機能: スマート事前診断</strong><br>
-        ファイルを読み込んだ瞬間に「防犯カメラ素材」や「HEVC素材」を自動検知し、最適な処理をアドバイスします。
+        <strong>⚡ スマート事前診断:</strong><br>
+        ファイルを読み込んだ瞬間に「防犯カメラ素材」や「iPhone(HEVC)素材」を自動検知し、バッジを表示します。
     </div>
 
     <ul class="nav nav-pills nav-fill mb-4" id="myTab" role="tablist">
@@ -83,7 +83,9 @@
             
             <div class="card mt-4">
                 <div class="card-header bg-light fw-bold">動画変換リスト</div>
-                <div id="video-result-list" class="card-body p-0"></div>
+                <div id="video-result-list" class="card-body p-0">
+                    <div class="text-center text-muted p-3">ここに選択したファイルが表示されます</div>
+                </div>
                 <div id="video-save-area" class="save-area">
                     <div class="d-flex justify-content-center gap-3">
                         <button id="video-single-btn" class="btn btn-success fw-bold px-4" style="display:none;">⬇ そのまま保存</button>
@@ -222,7 +224,7 @@
         }
     }
 
-    // --- 事前診断機能 (Smart Scan) ---
+    // --- 事前診断機能 (Smart Scan: 修正版) ---
     async function scanFiles(inputElement) {
         const list = document.getElementById('video-result-list');
         list.innerHTML = '';
@@ -237,15 +239,17 @@
             const dvrExts = ['dav', 'h264', '264', 'dat', 'vob', 'mkv', 'flv'];
             if (dvrExts.includes(ext)) {
                 tags.push({ text: '⚠️ 再変換推奨', type: 'warning' });
-                // 強制的にモード変更を促すUIもアリだが、今回は表示のみ
             }
 
-            // 2. HEVCチェック (簡易版: 先頭バイト読み込み)
-            // mp4/movのヘッダーを見て 'hvc1' か 'hev1' があればHEVC
+            // 2. HEVCチェック (バイト列直接比較方式)
             if (ext === 'mp4' || ext === 'mov') {
-                const isHevc = await checkHevcHeader(file);
-                if (isHevc) {
-                    tags.push({ text: '⚠️ H.265 (10bit不可)', type: 'danger' });
+                try {
+                    const isHevc = await checkHevcHeader(file);
+                    if (isHevc) {
+                        tags.push({ text: '⚠️ HEVC (10bit不可)', type: 'danger' });
+                    }
+                } catch(e) {
+                    console.error("Scan error:", e);
                 }
             }
 
@@ -253,22 +257,41 @@
         }
     }
 
-    // ファイルヘッダーを少し読んでHEVCか判定する関数
+    // 文字コード変換を使わない堅牢なHEVC判定
     async function checkHevcHeader(file) {
         return new Promise((resolve) => {
             const reader = new FileReader();
             reader.onload = function(e) {
-                const view = new DataView(e.target.result);
-                const text = new TextDecoder().decode(view);
-                // 単純文字列検索 (厳密ではないが実用十分)
-                if (text.includes('hvc1') || text.includes('hev1')) {
-                    resolve(true);
-                } else {
-                    resolve(false);
+                const arr = new Uint8Array(e.target.result);
+                
+                // HEVCを表す一般的なシグネチャ (hvc1, hev1, dvhe, dvh1)
+                // 各バイト列を定義 (ASCIIコード)
+                const signatures = [
+                    [0x68, 0x76, 0x63, 0x31], // hvc1
+                    [0x68, 0x65, 0x76, 0x31], // hev1
+                    [0x64, 0x76, 0x68, 0x65], // dvhe (Dolby Vision HEVC)
+                    [0x64, 0x76, 0x68, 0x31]  // dvh1
+                ];
+
+                let found = false;
+                // バイナリ配列を走査してシグネチャを探す
+                // 64KB分チェックすればftyp box等は十分含まれる
+                for (let i = 0; i < arr.length - 4; i++) {
+                    for (let sig of signatures) {
+                        if (arr[i] === sig[0] && arr[i+1] === sig[1] && arr[i+2] === sig[2] && arr[i+3] === sig[3]) {
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (found) break;
                 }
+                resolve(found);
             };
-            // 先頭4KBだけ読む
-            reader.readAsArrayBuffer(file.slice(0, 4096));
+            // 読み取りエラー時は false を返して続行させる
+            reader.onerror = () => resolve(false);
+            
+            // 先頭64KBを読み込む (4KBだと足りない場合があるため拡張)
+            reader.readAsArrayBuffer(file.slice(0, 65536));
         });
     }
 
@@ -317,7 +340,7 @@
             convertedVideos = [];
 
             const files = Array.from(fileInput.files);
-            // リスト再描画はせず、既存の行のステータスを更新する運用
+            // リストは事前スキャンで作られているので、ステータスのみ更新
 
             for (let i = 0; i < files.length; i++) {
                 const file = files[i];
@@ -347,8 +370,8 @@
                     
                     const data = ffmpeg.FS('readFile', outputName);
                     
-                    // 【新機能】0KB検知ロジック
-                    if (data.byteLength < 1000) { // 1KB未満は明らかに失敗
+                    // 【0KB検知ロジック】
+                    if (data.byteLength < 1000) { 
                         throw new Error("EMPTY_FILE");
                     }
 
@@ -366,7 +389,6 @@
                         updateResultRow(rowId, '非対応(10bit等)', 'status-warning');
                     } else if (err.message === "EMPTY_FILE") {
                         updateResultRow(rowId, '失敗(データ空)', 'status-error');
-                        // 自動的に再エンコードを促すタグを追加表示できると親切だが、まずはステータスで明示
                     } else {
                         updateResultRow(rowId, 'エラー', 'status-error');
                     }
