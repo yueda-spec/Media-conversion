@@ -3,42 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>マルチメディア一括変換ツール</title>
+    <title>マルチメディア一括変換ツール v2.0</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     
     <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 
     <style>
         body { background-color: #f0f2f5; padding-top: 2rem; font-family: "Helvetica Neue", Arial, sans-serif; }
         .main-container { max-width: 900px; margin: 0 auto; background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.12); }
         
-        /* === タブボタンのデザイン変更 === */
+        /* タブデザイン */
         .nav-pills .nav-link {
-            background-color: #f1f3f5; /* 未選択時の色 */
-            color: #495057;
-            font-weight: bold;
-            border-radius: 50px; /* 丸みをつける */
-            padding: 12px 20px;
-            margin: 0 5px;
-            border: 1px solid #dee2e6;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            background-color: #f1f3f5; color: #495057; font-weight: bold;
+            border-radius: 50px; padding: 12px 20px; margin: 0 5px;
+            border: 1px solid #dee2e6; transition: all 0.3s ease;
         }
-        .nav-pills .nav-link:hover {
-            background-color: #e9ecef;
-            transform: translateY(-2px); /* ホバーで少し浮く */
-        }
+        .nav-pills .nav-link:hover { background-color: #e9ecef; transform: translateY(-2px); }
         .nav-pills .nav-link.active {
-            background-color: #0d6efd; /* 選択時の色 */
-            color: white;
-            box-shadow: 0 4px 10px rgba(13, 110, 253, 0.4); /* 光るような影 */
-            transform: translateY(0);
-            border-color: #0d6efd;
+            background-color: #0d6efd; color: white;
+            box-shadow: 0 4px 10px rgba(13, 110, 253, 0.4);
+            transform: translateY(0); border-color: #0d6efd;
         }
 
-        /* モードカードのデザイン */
+        /* モードカード */
         .mode-card { border: 2px solid #e9ecef; padding: 15px; margin-bottom: 12px; border-radius: 10px; cursor: pointer; transition: all 0.2s; }
         .mode-card:hover { background-color: #f8f9fa; border-color: #dee2e6; }
         .mode-card.selected { border-color: #0d6efd; background-color: #f0f7ff; }
@@ -47,36 +38,36 @@
         /* 結果リスト */
         .result-item { background: #fff; border-bottom: 1px solid #eee; padding: 10px; display: flex; justify-content: space-between; align-items: center; }
         .result-item:last-child { border-bottom: none; }
-        .status-badge { font-size: 0.85rem; padding: 5px 10px; border-radius: 20px; min-width: 80px; text-align: center; display: inline-block;}
+        
+        /* バッジ */
+        .status-badge { font-size: 0.85rem; padding: 5px 12px; border-radius: 20px; min-width: 100px; text-align: center; display: inline-block; font-weight: bold;}
         .status-waiting { background: #eee; color: #666; }
-        .status-processing { background: #cfe2ff; color: #084298; animation: pulse 1.5s infinite; }
+        .status-processing { background: #cfe2ff; color: #084298; }
         .status-success { background: #d1e7dd; color: #0f5132; }
         .status-error { background: #f8d7da; color: #842029; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
         
-        .pdf-settings { background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #dee2e6; margin-bottom: 20px; }
+        /* ZIPボタンエリア */
+        .zip-area { display: none; padding: 15px; background: #e0e7ff; border-top: 1px solid #c7d2fe; text-align: center; }
+
+        /* 環境警告 */
+        .env-warning { font-size: 0.85rem; color: #666; margin-top: 10px; text-align: right; }
     </style>
 </head>
 <body>
 
 <div class="main-container">
-    <h3 class="mb-4 text-center fw-bold text-dark">マルチメディア一括変換ツール</h3>
+    <h3 class="mb-2 text-center fw-bold text-dark">マルチメディア一括変換ツール v2.0</h3>
+    <div class="env-warning">推奨: Google Chrome / Microsoft Edge (※Safariは動作が不安定な場合があります)</div>
 
-    <ul class="nav nav-pills nav-fill mb-4" id="myTab" role="tablist">
+    <ul class="nav nav-pills nav-fill my-4" id="myTab" role="tablist">
         <li class="nav-item">
-            <button class="nav-link active" id="video-tab" data-bs-toggle="tab" data-bs-target="#video-pane" type="button">
-                🎥 動画変換
-            </button>
+            <button class="nav-link active" id="video-tab" data-bs-toggle="tab" data-bs-target="#video-pane" type="button">🎥 動画変換</button>
         </li>
         <li class="nav-item">
-            <button class="nav-link" id="photo-tab" data-bs-toggle="tab" data-bs-target="#photo-pane" type="button">
-                📷 写真変換 (HEIC)
-            </button>
+            <button class="nav-link" id="photo-tab" data-bs-toggle="tab" data-bs-target="#photo-pane" type="button">📷 写真変換</button>
         </li>
         <li class="nav-item">
-            <button class="nav-link" id="pdf-tab" data-bs-toggle="tab" data-bs-target="#pdf-pane" type="button">
-                📄 PDF変換
-            </button>
+            <button class="nav-link" id="pdf-tab" data-bs-toggle="tab" data-bs-target="#pdf-pane" type="button">📄 PDF変換</button>
         </li>
     </ul>
 
@@ -122,14 +113,27 @@
             <div id="desc-reencode" class="description-box"><strong>🛠️ MP4再エンコード:</strong> 特殊形式を汎用MP4に作り直し。時間かかります。</div>
 
             <button id="video-convert-btn" class="btn btn-primary w-100 mt-4 py-2 fw-bold" disabled><span id="btn-text">エンジンロード中...</span></button>
-            <div class="card mt-4"><div class="card-header bg-light fw-bold">動画変換リスト</div><div id="video-result-list" class="card-body p-0"></div></div>
+            
+            <div class="card mt-4">
+                <div class="card-header bg-light fw-bold">動画変換リスト</div>
+                <div id="video-result-list" class="card-body p-0"></div>
+                <div id="video-zip-area" class="zip-area">
+                    <button id="video-zip-btn" class="btn btn-success fw-bold px-4">📦 すべてZIPで保存</button>
+                </div>
+            </div>
         </div>
 
         <div class="tab-pane fade" id="photo-pane">
             <div class="alert alert-info">iPhoneの <strong>.heic</strong> 画像を <strong>.jpg</strong> に一括変換します。</div>
             <div class="mb-3"><input type="file" class="form-control" id="photo-uploader" accept=".heic,.HEIC" multiple></div>
             <button id="photo-convert-btn" class="btn btn-success w-100 py-2 fw-bold">変換開始</button>
-            <div class="card mt-4"><div class="card-header bg-light fw-bold">写真変換リスト</div><div id="photo-result-list" class="card-body p-0"></div></div>
+            <div class="card mt-4">
+                <div class="card-header bg-light fw-bold">写真変換リスト</div>
+                <div id="photo-result-list" class="card-body p-0"></div>
+                <div id="photo-zip-area" class="zip-area">
+                    <button id="photo-zip-btn" class="btn btn-primary fw-bold px-4">📦 すべてZIPで保存</button>
+                </div>
+            </div>
         </div>
 
         <div class="tab-pane fade" id="pdf-pane">
@@ -137,32 +141,26 @@
                 PDFの全ページを画像として書き出します。<br>
                 <strong>放送用高画質設定 (Scale x2.0)</strong> で出力されます。
             </div>
-            
-            <div class="pdf-settings">
-                <label class="form-label fw-bold mb-2">出力形式を選択:</label>
+            <div class="pdf-settings p-3 bg-light rounded border mb-3">
+                <label class="form-label fw-bold mb-2">出力形式:</label>
                 <div class="d-flex gap-4">
                     <div class="form-check">
                         <input class="form-check-input" type="radio" name="pdfFormat" id="pdf-jpg" value="jpeg" checked>
-                        <label class="form-check-label" for="pdf-jpg"><strong>JPEG</strong> (写真・スキャン文書向き)</label>
+                        <label class="form-check-label" for="pdf-jpg"><strong>JPEG</strong> (写真向き)</label>
                     </div>
                     <div class="form-check">
                         <input class="form-check-input" type="radio" name="pdfFormat" id="pdf-png" value="png">
-                        <label class="form-check-label" for="pdf-png"><strong>PNG</strong> (文字・図版・透過向き)</label>
+                        <label class="form-check-label" for="pdf-png"><strong>PNG</strong> (文字向き)</label>
                     </div>
                 </div>
             </div>
-
-            <div class="mb-3">
-                <label class="form-label fw-bold">ファイル選択 (複数OK)</label>
-                <input type="file" class="form-control" id="pdf-uploader" accept=".pdf" multiple>
-            </div>
-            
+            <div class="mb-3"><input type="file" class="form-control" id="pdf-uploader" accept=".pdf" multiple></div>
             <button id="pdf-convert-btn" class="btn btn-danger w-100 py-2 fw-bold">PDFを画像に変換</button>
-            
             <div class="card mt-4">
                 <div class="card-header bg-light fw-bold">PDF変換リスト</div>
-                <div id="pdf-result-list" class="card-body p-0">
-                    <div class="text-center text-muted p-3">ここに変換結果が表示されます</div>
+                <div id="pdf-result-list" class="card-body p-0"></div>
+                <div id="pdf-zip-area" class="zip-area">
+                    <button id="pdf-zip-btn" class="btn btn-primary fw-bold px-4">📦 すべてZIPで保存</button>
                 </div>
             </div>
         </div>
@@ -172,39 +170,58 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    // --- 共通: 結果行の管理 ---
+    // --- 共通ユーティリティ ---
+    let objectUrls = []; // メモリ解放用リスト
+
+    function cleanUpObjectUrls() {
+        objectUrls.forEach(url => URL.revokeObjectURL(url));
+        objectUrls = [];
+    }
+
     function addResultRow(containerId, fileName, statusText, statusClass, rowId) {
         const container = document.getElementById(containerId);
-        if(container.querySelector('.text-muted')) container.innerHTML = '';
+        if(container.querySelector('.text-muted')) container.innerHTML = ''; // 初回クリア
+        
         const div = document.createElement('div');
         div.className = 'result-item';
         div.id = rowId;
         div.innerHTML = `
             <div class="text-truncate" style="max-width: 50%; font-weight:500;">${fileName}</div>
-            <div class="d-flex align-items-center"><span class="status-badge ${statusClass} me-3" id="${rowId}-status">${statusText}</span><span id="${rowId}-action"></span></div>
+            <div class="d-flex align-items-center"><span class="status-badge ${statusClass} me-3" id="${rowId}-status">${statusText}</span></div>
         `;
         container.appendChild(div);
     }
 
-    function updateResultRow(rowId, statusText, statusClass, downloadUrl = null, downloadName = null) {
+    function updateResultRow(rowId, statusText, statusClass) {
         const badge = document.getElementById(`${rowId}-status`);
-        const action = document.getElementById(`${rowId}-action`);
         if(badge) {
             badge.className = `status-badge ${statusClass} me-3`;
             badge.innerText = statusText;
-        }
-        if (downloadUrl && action) {
-            action.innerHTML = `<a href="${downloadUrl}" download="${downloadName}" class="btn btn-sm btn-primary">保存</a>`;
         }
     }
 
     // --- 1. 動画変換 (FFmpeg) ---
     const { createFFmpeg, fetchFile } = FFmpeg;
     let ffmpeg = null;
+    let currentZip = null; // 現在作成中のZIP
+
     const loadFFmpeg = async () => {
         const btn = document.getElementById('video-convert-btn');
         const btnText = document.getElementById('btn-text');
-        ffmpeg = createFFmpeg({ log: false });
+        
+        // ログを有効化（進捗計算用）
+        ffmpeg = createFFmpeg({ log: true });
+
+        // 進捗コールバックの設定
+        ffmpeg.setProgress(({ ratio }) => {
+            // ratioは 0.0 ~ 1.0 (ただし時々1を超えることがあるのでclampする)
+            if (window.currentProcessingRowId) {
+                const percent = Math.min(Math.max(Math.round(ratio * 100), 0), 100);
+                const badge = document.getElementById(`${window.currentProcessingRowId}-status`);
+                if(badge) badge.innerText = `処理中 ${percent}%`;
+            }
+        });
+
         try {
             await ffmpeg.load();
             btnText.innerText = '変換開始';
@@ -225,12 +242,20 @@
         const fileInput = document.getElementById('video-uploader');
         const mode = document.querySelector('input[name="videoMode"]:checked');
         const btn = document.getElementById('video-convert-btn');
+        const zipArea = document.getElementById('video-zip-area');
+        
         if (fileInput.files.length === 0) { alert('ファイルを選択してください'); return; }
         if (!mode) { alert('モードを選択してください'); return; }
 
         btn.disabled = true;
+        zipArea.style.display = 'none'; // ZIPボタン隠す
         document.getElementById('video-result-list').innerHTML = '';
+        cleanUpObjectUrls(); // 前回のURL解放
+
+        currentZip = new JSZip(); // 新しいZIP作成
         const files = Array.from(fileInput.files);
+        
+        // リスト作成
         files.forEach((file, i) => addResultRow('video-result-list', file.name, '待機中', 'status-waiting', `v-row-${i}`));
 
         for (let i = 0; i < files.length; i++) {
@@ -238,7 +263,9 @@
             const rowId = `v-row-${i}`;
             const inputName = `in_${i}`;
             const outputName = `out_${i}.mp4`;
-            updateResultRow(rowId, '処理中...', 'status-processing');
+            
+            window.currentProcessingRowId = rowId; // 進捗表示用IDセット
+            updateResultRow(rowId, '準備中...', 'status-processing');
 
             try {
                 ffmpeg.FS('writeFile', inputName, await fetchFile(file));
@@ -248,27 +275,53 @@
                 else command = ['-i', inputName, '-c:v', 'libx264', '-preset', 'ultrafast', '-c:a', 'aac', outputName];
 
                 await ffmpeg.run(...command);
+                
                 const data = ffmpeg.FS('readFile', outputName);
-                const url = URL.createObjectURL(new Blob([data.buffer], { type: 'video/mp4' }));
-                updateResultRow(rowId, '完了', 'status-success', url, `conv_${file.name}.mp4`);
+                
+                // ZIPに追加
+                const newFileName = `converted_${file.name.replace(/\.[^/.]+$/, "")}.mp4`;
+                currentZip.file(newFileName, data);
+                
+                updateResultRow(rowId, '完了', 'status-success');
+
+                // 重要：FSのゴミ掃除
                 try { ffmpeg.FS('unlink', inputName); ffmpeg.FS('unlink', outputName); } catch(e){}
+
             } catch (err) {
                 console.error(err);
                 updateResultRow(rowId, 'エラー', 'status-error');
             }
         }
+        
+        window.currentProcessingRowId = null;
         btn.disabled = false;
-        alert("動画処理完了");
+        
+        // ZIPボタン表示
+        zipArea.style.display = 'block';
+        
+        // ZIP保存ボタンのイベント
+        document.getElementById('video-zip-btn').onclick = function() {
+            currentZip.generateAsync({type:"blob"}).then(function(content) {
+                saveAs(content, "video_converted_batch.zip");
+            });
+        };
+        alert("すべての変換が完了しました。下部のボタンからZIPを保存できます。");
     });
 
     // --- 2. 写真変換 (HEIC -> JPG) ---
     document.getElementById('photo-convert-btn').addEventListener('click', async () => {
         const fileInput = document.getElementById('photo-uploader');
         const btn = document.getElementById('photo-convert-btn');
+        const zipArea = document.getElementById('photo-zip-area');
+
         if (fileInput.files.length === 0) { alert('ファイルを選択してください'); return; }
 
         btn.disabled = true;
+        zipArea.style.display = 'none';
         document.getElementById('photo-result-list').innerHTML = '';
+        cleanUpObjectUrls();
+
+        currentZip = new JSZip();
         const files = Array.from(fileInput.files);
         files.forEach((file, i) => addResultRow('photo-result-list', file.name, '待機中', 'status-waiting', `p-row-${i}`));
 
@@ -278,15 +331,24 @@
             try {
                 const res = await heic2any({ blob: files[i], toType: "image/jpeg", quality: 0.9 });
                 const blob = Array.isArray(res) ? res[0] : res;
-                const url = URL.createObjectURL(blob);
-                updateResultRow(rowId, '完了', 'status-success', url, files[i].name.replace(/\.[^/.]+$/, "") + ".jpg");
+                
+                const newName = files[i].name.replace(/\.[^/.]+$/, "") + ".jpg";
+                currentZip.file(newName, blob);
+
+                updateResultRow(rowId, '完了', 'status-success');
             } catch (e) {
                 console.error(e);
                 updateResultRow(rowId, '失敗', 'status-error');
             }
         }
         btn.disabled = false;
-        alert("写真処理完了");
+        zipArea.style.display = 'block';
+        document.getElementById('photo-zip-btn').onclick = function() {
+            currentZip.generateAsync({type:"blob"}).then(function(content) {
+                saveAs(content, "photo_batch.zip");
+            });
+        };
+        alert("写真処理完了。ZIP保存可能です。");
     });
 
     // --- 3. PDF変換 (PDF.js) ---
@@ -294,29 +356,40 @@
 
     document.getElementById('pdf-convert-btn').addEventListener('click', async () => {
         const fileInput = document.getElementById('pdf-uploader');
-        const format = document.querySelector('input[name="pdfFormat"]:checked').value; // jpeg or png
+        const format = document.querySelector('input[name="pdfFormat"]:checked').value;
         const btn = document.getElementById('pdf-convert-btn');
+        const zipArea = document.getElementById('pdf-zip-area');
 
         if (fileInput.files.length === 0) { alert('PDFファイルを選択してください'); return; }
 
         btn.disabled = true;
+        zipArea.style.display = 'none';
         const listContainer = document.getElementById('pdf-result-list');
         listContainer.innerHTML = '';
+        cleanUpObjectUrls();
 
+        currentZip = new JSZip();
         const files = Array.from(fileInput.files);
         
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
-            
             try {
                 const arrayBuffer = await file.arrayBuffer();
                 const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
                 
+                // ページ数警告
+                if (pdf.numPages > 30) {
+                    addResultRow('pdf-result-list', file.name, `警告: ${pdf.numPages}ページあります。時間がかかります。`, 'status-error', `pdf-warn-${i}`);
+                }
+
                 for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
                     const rowId = `pdf-${i}-page-${pageNum}`;
                     const fileName = `${file.name} (P.${pageNum})`;
                     
-                    addResultRow('pdf-result-list', fileName, 'レンダリング中...', 'status-processing', rowId);
+                    addResultRow('pdf-result-list', fileName, '処理中...', 'status-processing', rowId);
+
+                    // UIフリーズ防止のための微小な休憩
+                    await new Promise(r => setTimeout(r, 10));
 
                     const page = await pdf.getPage(pageNum);
                     const viewport = page.getViewport({ scale: 2.0 });
@@ -331,11 +404,14 @@
                     const mimeType = format === 'png' ? 'image/png' : 'image/jpeg';
                     const ext = format === 'png' ? '.png' : '.jpg';
                     
-                    canvas.toBlob((blob) => {
-                        const url = URL.createObjectURL(blob);
-                        const outputName = file.name.replace(/\.pdf$/i, "") + `_page${pageNum}` + ext;
-                        updateResultRow(rowId, '完了', 'status-success', url, outputName);
-                    }, mimeType, 0.9);
+                    await new Promise(resolve => {
+                        canvas.toBlob((blob) => {
+                            const outputName = file.name.replace(/\.pdf$/i, "") + `_page${String(pageNum).padStart(2, '0')}` + ext;
+                            currentZip.file(outputName, blob);
+                            updateResultRow(rowId, '完了', 'status-success');
+                            resolve();
+                        }, mimeType, 0.9);
+                    });
                 }
             } catch (err) {
                 console.error(err);
@@ -344,7 +420,13 @@
         }
 
         btn.disabled = false;
-        alert("PDF処理完了");
+        zipArea.style.display = 'block';
+        document.getElementById('pdf-zip-btn').onclick = function() {
+            currentZip.generateAsync({type:"blob"}).then(function(content) {
+                saveAs(content, "pdf_images_batch.zip");
+            });
+        };
+        alert("PDF処理完了。ZIP保存可能です。");
     });
 </script>
 </body>
