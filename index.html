@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>マルチメディア一括変換ツール v5.0</title>
+    <title>マルチメディア一括変換ツール v5.2</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     
     <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
@@ -29,6 +29,7 @@
         .status-processing { background: #cfe2ff; color: #084298; }
         .status-success { background: #d1e7dd; color: #0f5132; }
         .status-error { background: #f8d7da; color: #842029; }
+        .status-warning { background: #fff3cd; color: #856404; }
         
         .save-area { display: none; padding: 15px; background: #e0e7ff; border-top: 1px solid #c7d2fe; text-align: center; }
         .spec-alert { font-size: 0.9rem; background-color: #fff8f8; border: 1px solid #f5c6cb; color: #721c24; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
@@ -41,13 +42,13 @@
 <body>
 
 <div class="main-container">
-    <h3 class="mb-3 text-center fw-bold text-dark">マルチメディア一括変換ツール v5.0</h3>
+    <h3 class="mb-3 text-center fw-bold text-dark">マルチメディア一括変換ツール v5.2</h3>
     
     <div class="spec-alert">
         <span class="spec-title">⚠️ ご利用前の注意</span>
         <ul class="spec-list">
             <li><strong>推奨環境:</strong> Google Chrome / Microsoft Edge</li>
-            <li><strong>サイズ制限:</strong> ブラウザのメモリ制限のため、2GBを超える長尺素材の変換は推奨しません。</li>
+            <li><strong>非対応形式:</strong> <strong>iPhone等の10bit H.265 (HEVC)</strong> はブラウザの仕様上変換できません。(8bitのH.265は変換可能です)</li>
             <li><strong>仕様:</strong> 動画は編集ソフト互換性のため、偶数解像度に調整されます。</li>
         </ul>
     </div>
@@ -89,9 +90,7 @@
         </div>
 
         <div class="tab-pane fade" id="photo-pane">
-            <div class="alert alert-info py-2">
-                <small><strong>🔒 セキュリティ:</strong> ファイルは外部サーバーへ送信されず、ブラウザ内で安全に処理されます。</small>
-            </div>
+            <div class="alert alert-info py-2"><small><strong>🔒 セキュリティ:</strong> ファイルは外部サーバーへ送信されず、ブラウザ内で安全に処理されます。</small></div>
             <div class="mb-3"><input type="file" class="form-control" id="photo-uploader" accept=".heic,.HEIC" multiple></div>
             <button id="photo-convert-btn" class="btn btn-success w-100 py-2 fw-bold">変換開始</button>
             <div class="card mt-4">
@@ -107,9 +106,7 @@
         </div>
 
         <div class="tab-pane fade" id="pdf-pane">
-            <div class="alert alert-warning py-2">
-                <small><strong>🔒 セキュリティ:</strong> データは外部へ送信されません。Scale 2.0で高画質出力されます。</small>
-            </div>
+            <div class="alert alert-warning py-2"><small><strong>🔒 セキュリティ:</strong> データは外部へ送信されません。Scale 2.0で高画質出力されます。</small></div>
             <div class="pdf-settings p-3 bg-light rounded border mb-3">
                 <label class="form-label fw-bold mb-2">出力形式:</label>
                 <div class="d-flex gap-4">
@@ -167,292 +164,5 @@
         objectUrls.forEach(url => URL.revokeObjectURL(url));
         objectUrls = [];
     }
-
     function addResultRow(containerId, fileName, statusText, statusClass, rowId) {
-        const container = document.getElementById(containerId);
-        if(container.querySelector('.text-muted') || container.innerHTML === '') container.innerHTML = ''; 
-        const div = document.createElement('div');
-        div.className = 'result-item';
-        div.id = rowId;
-        div.innerHTML = `<div class="text-truncate" style="max-width: 50%; font-weight:500;">${fileName}</div><div class="d-flex align-items-center"><span class="status-badge ${statusClass} me-3" id="${rowId}-status">${statusText}</span></div>`;
-        container.appendChild(div);
-    }
-
-    function updateResultRow(rowId, statusText, statusClass) {
-        const badge = document.getElementById(`${rowId}-status`);
-        if(badge) { badge.className = `status-badge ${statusClass} me-3`; badge.innerText = statusText; }
-    }
-
-    function selectMode(mode) {
-        document.getElementById('mode-' + mode).checked = true;
-        document.querySelectorAll('.mode-card').forEach(el => el.classList.remove('selected'));
-        document.getElementById('mode-' + mode).closest('.mode-card').classList.add('selected');
-        document.querySelectorAll('.description-box').forEach(el => el.style.display = 'none');
-        document.getElementById('desc-' + mode).style.display = 'block';
-    }
-
-    // --- UI制御関数 (ボタン切り替え) ---
-    function updateDownloadButtons(count, singleBtnId, zipBtnId) {
-        const singleBtn = document.getElementById(singleBtnId);
-        const zipBtn = document.getElementById(zipBtnId);
-
-        if (count === 1) {
-            // 1ファイル: シングル表示、ZIP無効化
-            singleBtn.style.display = 'inline-block';
-            zipBtn.disabled = true;
-            zipBtn.classList.add('btn-secondary');
-            zipBtn.classList.remove('btn-success');
-        } else {
-            // 複数ファイル: シングル非表示、ZIP有効化
-            singleBtn.style.display = 'none';
-            zipBtn.disabled = false;
-            zipBtn.classList.remove('btn-secondary');
-            zipBtn.classList.add('btn-success');
-        }
-    }
-
-    // --- 1. 動画変換 ---
-    const { createFFmpeg, fetchFile } = FFmpeg;
-    let ffmpeg = null;
-
-    const ensureFFmpegLoaded = async () => {
-        const btnText = document.getElementById('btn-text');
-        if (ffmpeg === null) {
-            btnText.innerText = 'エンジン初期化中...';
-            ffmpeg = createFFmpeg({ log: true });
-            ffmpeg.setProgress(({ ratio }) => {
-                if (window.currentProcessingRowId) {
-                    const percent = Math.min(Math.max(Math.round(ratio * 100), 0), 100);
-                    const badge = document.getElementById(`${window.currentProcessingRowId}-status`);
-                    if(badge) badge.innerText = `処理中 ${percent}%`;
-                }
-            });
-            await ffmpeg.load();
-        } else if (!ffmpeg.isLoaded()) {
-            btnText.innerText = 'エンジン再ロード中...';
-            await ffmpeg.load();
-        }
-    };
-
-    document.getElementById('video-convert-btn').addEventListener('click', async () => {
-        const fileInput = document.getElementById('video-uploader');
-        const mode = document.querySelector('input[name="videoMode"]:checked');
-        const btn = document.getElementById('video-convert-btn');
-        const btnText = document.getElementById('btn-text');
-        const saveArea = document.getElementById('video-save-area');
-        
-        if (fileInput.files.length === 0) { alert('ファイルを選択してください'); return; }
-        if (!mode) { alert('モードを選択してください'); return; }
-
-        try {
-            btn.disabled = true;
-            await ensureFFmpegLoaded();
-            btnText.innerText = '変換中...';
-
-            saveArea.style.display = 'none';
-            document.getElementById('video-result-list').innerHTML = '';
-            cleanUpObjectUrls();
-            convertedVideos = [];
-
-            const files = Array.from(fileInput.files);
-            files.forEach((file, i) => addResultRow('video-result-list', file.name, '待機中', 'status-waiting', `v-row-${i}`));
-
-            for (let i = 0; i < files.length; i++) {
-                const file = files[i];
-                const rowId = `v-row-${i}`;
-                const inputName = `in_${i}`;
-                const outputName = `out_${i}.mp4`;
-                
-                window.currentProcessingRowId = rowId;
-                updateResultRow(rowId, '準備中...', 'status-processing');
-
-                try {
-                    ffmpeg.FS('writeFile', inputName, await fetchFile(file));
-                    let command = [];
-                    if (mode.value === 'rewrap') {
-                        command = ['-fflags', '+genpts', '-i', inputName, '-c', 'copy', '-map', '0', '-ignore_unknown', outputName];
-                    } else {
-                        command = ['-fflags', '+genpts', '-analyzeduration', '100M', '-probesize', '100M', '-i', inputName, '-map', '0:v:0?', '-map', '0:a:0?', '-vf', 'scale=trunc(iw/2)*2:trunc(ih/2)*2', '-r', '30000/1001', '-pix_fmt', 'yuv420p', '-c:v', 'libx264', '-preset', 'ultrafast', '-profile:v', 'high', '-c:a', 'aac', '-ar', '48000', outputName];
-                    }
-
-                    await ffmpeg.run(...command);
-                    
-                    try {
-                        const data = ffmpeg.FS('readFile', outputName);
-                        const blob = new Blob([data.buffer], { type: 'video/mp4' });
-                        const newFileName = `converted_${file.name.replace(/\.[^/.]+$/, "")}.mp4`;
-                        
-                        convertedVideos.push({ name: newFileName, blob: blob });
-                        updateResultRow(rowId, '完了', 'status-success');
-                    } catch (readErr) {
-                        console.error(readErr);
-                        throw new Error("出力生成失敗");
-                    }
-                    try { ffmpeg.FS('unlink', inputName); ffmpeg.FS('unlink', outputName); } catch(e){}
-
-                } catch (err) {
-                    console.error(err);
-                    updateResultRow(rowId, 'エラー', 'status-error');
-                }
-            }
-
-            window.currentProcessingRowId = null;
-            try { await ffmpeg.exit(); ffmpeg = null; } catch(e){}
-
-            btnText.innerText = '変換開始';
-            btn.disabled = false;
-            
-            // ボタン表示切り替え
-            updateDownloadButtons(convertedVideos.length, 'video-single-btn', 'video-zip-btn');
-            saveArea.style.display = 'block';
-
-        } catch (globalErr) {
-            console.error(globalErr);
-            alert("エラーが発生しました。");
-            btn.disabled = false;
-        }
-    });
-
-    // 動画保存: シングル
-    document.getElementById('video-single-btn').onclick = function() {
-        if (convertedVideos.length > 0) {
-            const f = convertedVideos[0];
-            const url = URL.createObjectURL(f.blob);
-            objectUrls.push(url); // 後で消すために保存
-            saveAs(f.blob, f.name);
-        }
-    };
-    // 動画保存: ZIP
-    document.getElementById('video-zip-btn').onclick = function() {
-        const zip = new JSZip();
-        convertedVideos.forEach(f => zip.file(f.name, f.blob));
-        zip.generateAsync({type:"blob"}).then(c => saveAs(c, "video_converted.zip"));
-    };
-
-
-    // --- 2. 写真変換 ---
-    document.getElementById('photo-convert-btn').addEventListener('click', async () => {
-        const fileInput = document.getElementById('photo-uploader');
-        const btn = document.getElementById('photo-convert-btn');
-        const saveArea = document.getElementById('photo-save-area');
-        if (fileInput.files.length === 0) { alert('選択してください'); return; }
-
-        btn.disabled = true;
-        saveArea.style.display = 'none';
-        document.getElementById('photo-result-list').innerHTML = '';
-        convertedPhotos = [];
-
-        const files = Array.from(fileInput.files);
-        files.forEach((file, i) => addResultRow('photo-result-list', file.name, '待機中', 'status-waiting', `p-row-${i}`));
-
-        for (let i = 0; i < files.length; i++) {
-            const rowId = `p-row-${i}`;
-            updateResultRow(rowId, '変換中...', 'status-processing');
-            try {
-                if (typeof heic2any === 'undefined') throw new Error("HEICエンジン未ロード");
-                const res = await heic2any({ blob: files[i], toType: "image/jpeg", quality: 0.9 });
-                const blob = Array.isArray(res) ? res[0] : res;
-                const newName = files[i].name.replace(/\.[^/.]+$/, "") + ".jpg";
-                
-                convertedPhotos.push({ name: newName, blob: blob });
-                updateResultRow(rowId, '完了', 'status-success');
-            } catch (e) {
-                console.error(e);
-                const msg = (typeof heic2any === 'undefined') ? "ライブラリ未検出" : "変換失敗";
-                updateResultRow(rowId, msg, 'status-error');
-            }
-        }
-        btn.disabled = false;
-        
-        // ボタン表示切り替え
-        updateDownloadButtons(convertedPhotos.length, 'photo-single-btn', 'photo-zip-btn');
-        saveArea.style.display = 'block';
-    });
-
-    // 写真保存: シングル
-    document.getElementById('photo-single-btn').onclick = function() {
-        if (convertedPhotos.length > 0) saveAs(convertedPhotos[0].blob, convertedPhotos[0].name);
-    };
-    // 写真保存: ZIP
-    document.getElementById('photo-zip-btn').onclick = function() {
-        const zip = new JSZip();
-        convertedPhotos.forEach(f => zip.file(f.name, f.blob));
-        zip.generateAsync({type:"blob"}).then(c => saveAs(c, "photo_converted.zip"));
-    };
-
-
-    // --- 3. PDF変換 ---
-    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-    document.getElementById('pdf-convert-btn').addEventListener('click', async () => {
-        const fileInput = document.getElementById('pdf-uploader');
-        const format = document.querySelector('input[name="pdfFormat"]:checked').value;
-        const btn = document.getElementById('pdf-convert-btn');
-        const saveArea = document.getElementById('pdf-save-area');
-
-        if (fileInput.files.length === 0) { alert('PDFを選択してください'); return; }
-
-        btn.disabled = true;
-        saveArea.style.display = 'none';
-        document.getElementById('pdf-result-list').innerHTML = '';
-        convertedPdfs = [];
-
-        const files = Array.from(fileInput.files);
-        for (let i = 0; i < files.length; i++) {
-            const file = files[i];
-            try {
-                const arrayBuffer = await file.arrayBuffer();
-                const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
-                if (pdf.numPages > 30) addResultRow('pdf-result-list', file.name, `警告: ${pdf.numPages}ページ (時間かかります)`, 'status-error', `pdf-warn-${i}`);
-
-                for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-                    const rowId = `pdf-${i}-page-${pageNum}`;
-                    const fileName = `${file.name} (P.${pageNum})`;
-                    addResultRow('pdf-result-list', fileName, 'レンダリング中...', 'status-processing', rowId);
-                    await new Promise(r => setTimeout(r, 10));
-
-                    const page = await pdf.getPage(pageNum);
-                    const viewport = page.getViewport({ scale: 2.0 });
-                    const canvas = document.createElement('canvas');
-                    const context = canvas.getContext('2d');
-                    canvas.height = viewport.height;
-                    canvas.width = viewport.width;
-                    await page.render({ canvasContext: context, viewport: viewport }).promise;
-
-                    const mimeType = format === 'png' ? 'image/png' : 'image/jpeg';
-                    const ext = format === 'png' ? '.png' : '.jpg';
-                    
-                    await new Promise(resolve => {
-                        canvas.toBlob((blob) => {
-                            const outputName = file.name.replace(/\.pdf$/i, "") + `_page${String(pageNum).padStart(2, '0')}` + ext;
-                            convertedPdfs.push({ name: outputName, blob: blob });
-                            updateResultRow(rowId, '完了', 'status-success');
-                            resolve();
-                        }, mimeType, 0.9);
-                    });
-                }
-            } catch (err) {
-                console.error(err);
-                addResultRow('pdf-result-list', file.name, 'エラー', 'status-error', `pdf-err-${i}`);
-            }
-        }
-        btn.disabled = false;
-        
-        // ボタン表示切り替え
-        updateDownloadButtons(convertedPdfs.length, 'pdf-single-btn', 'pdf-zip-btn');
-        saveArea.style.display = 'block';
-    });
-
-    // PDF保存: シングル (※PDFで1ページのみの場合や、結合ロジックがないので先頭ファイルのみ)
-    document.getElementById('pdf-single-btn').onclick = function() {
-        if (convertedPdfs.length > 0) saveAs(convertedPdfs[0].blob, convertedPdfs[0].name);
-    };
-    // PDF保存: ZIP
-    document.getElementById('pdf-zip-btn').onclick = function() {
-        const zip = new JSZip();
-        convertedPdfs.forEach(f => zip.file(f.name, f.blob));
-        zip.generateAsync({type:"blob"}).then(c => saveAs(c, "pdf_converted.zip"));
-    };
-
-</script>
-</body>
-</html>
+        const container = document
