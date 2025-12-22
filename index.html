@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>メディア変換ツール v9.3</title>
+    <title>メディア変換ツール v11.0 (AI Check)</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
     
     <style>
@@ -23,15 +23,10 @@
         .status-processing { background: #cfe2ff; color: #084298; }
         .status-success { background: #d1e7dd; color: #0f5132; }
         .status-error { background: #f8d7da; color: #842029; }
-        .status-retry { background: #fff3cd; color: #856404; }
-        
-        .tag-warning { font-size: 0.75rem; padding: 3px 8px; border-radius: 4px; background: #fff3cd; color: #856404; border: 1px solid #ffeeba; margin-left: 10px; font-weight: bold; }
-        .tag-danger { font-size: 0.75rem; padding: 3px 8px; border-radius: 4px; background: #f8d7da; color: #842029; border: 1px solid #f5c6cb; margin-left: 10px; font-weight: bold; }
         
         .save-area { display: none; padding: 15px; background: #e0e7ff; border-top: 1px solid #c7d2fe; text-align: center; }
         .description-box { background-color: #fff3cd; border: 1px solid #ffecb5; padding: 15px; border-radius: 8px; margin-top: 15px; display: none; color: #664d03; }
         
-        /* フッター情報のスタイル */
         .footer-info { margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid #eee; font-size: 0.85rem; color: #6c757d; }
         .footer-section-title { font-weight: bold; margin-bottom: 0.5rem; color: #343a40; display: flex; align-items: center; }
         
@@ -41,19 +36,22 @@
 <body>
 
 <div class="main-container">
-    <h3 class="mb-4 text-center fw-bold text-dark">メディア変換ツール v9.3</h3>
+    <h3 class="mb-4 text-center fw-bold text-dark">メディア変換ツール v11.0</h3>
     
     <div id="engine-status" class="alert alert-danger py-2 text-center small"></div>
     
     <ul class="nav nav-pills nav-fill mb-4" id="myTab" role="tablist">
         <li class="nav-item">
-            <button class="nav-link active" id="photo-tab" data-bs-toggle="tab" data-bs-target="#photo-pane" type="button">📷 HEIC画像変換</button>
+            <button class="nav-link active" id="photo-tab" data-bs-toggle="tab" data-bs-target="#photo-pane" type="button">📷 HEIC画像</button>
         </li>
         <li class="nav-item">
             <button class="nav-link" id="pdf-tab" data-bs-toggle="tab" data-bs-target="#pdf-pane" type="button">📄 PDF変換</button>
         </li>
         <li class="nav-item">
-            <button class="nav-link" id="video-tab" data-bs-toggle="tab" data-bs-target="#video-pane" type="button">🎥 動画変換（簡易版）</button>
+            <button class="nav-link" id="video-tab" data-bs-toggle="tab" data-bs-target="#video-pane" type="button">🎥 動画変換</button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" id="telop-tab" data-bs-toggle="tab" data-bs-target="#telop-pane" type="button">🎞️ テロップ結合</button>
         </li>
     </ul>
 
@@ -124,6 +122,28 @@
                 </div>
             </div>
         </div>
+
+        <div class="tab-pane fade" id="telop-pane">
+            <div class="alert alert-primary py-2"><small><strong>🤖 AIチェックモード:</strong> 各画像を0.5秒ずつ表示し、上部にファイル名を印字します。</small></div>
+            
+            <div class="mb-3">
+                <label class="form-label fw-bold">1. テロップ画像選択 (PNG/JPG)</label>
+                <input type="file" class="form-control" id="telop-uploader" accept="image/*" multiple>
+            </div>
+
+            <button id="telop-convert-btn" class="btn btn-warning w-100 py-2 fw-bold text-dark">動画を作成 (MP4)</button>
+            <div id="telop-progress-bar" class="progress mt-3" style="display:none; height: 25px;">
+                <div class="progress-bar progress-bar-striped progress-bar-animated bg-warning text-dark fw-bold" role="progressbar" style="width: 0%">0%</div>
+            </div>
+            
+            <div class="card mt-4">
+                <div class="card-header bg-light fw-bold">作成結果</div>
+                <div id="telop-result-area" class="card-body text-center p-4">
+                    <div class="text-muted">ここに結果が表示されます</div>
+                </div>
+            </div>
+        </div>
+
     </div>
     
     <div class="footer-info">
@@ -162,119 +182,61 @@
 
 <script>
     const libs = {
-        heicTo: [
-            "https://cdn.jsdelivr.net/npm/heic-to@1.3.0/dist/iife/heic-to.js", 
-            "https://unpkg.com/heic-to@1.3.0/dist/iife/heic-to.js"
-        ],
-        heic2any: [
-            "https://cdnjs.cloudflare.com/ajax/libs/heic2any/0.0.4/heic2any.min.js",
-            "https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"
-        ]
+        heicTo: [ "https://cdn.jsdelivr.net/npm/heic-to@1.3.0/dist/iife/heic-to.js", "https://unpkg.com/heic-to@1.3.0/dist/iife/heic-to.js" ],
+        heic2any: [ "https://cdnjs.cloudflare.com/ajax/libs/heic2any/0.0.4/heic2any.min.js", "https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js" ]
     };
-
     function loadScript(url) {
         return new Promise((resolve, reject) => {
             const script = document.createElement('script');
-            script.src = url;
-            script.onload = () => resolve(true);
-            script.onerror = () => reject(false);
+            script.src = url; script.onload = () => resolve(true); script.onerror = () => reject(false);
             document.head.appendChild(script);
         });
     }
-
     async function initEngines() {
         const statusEl = document.getElementById('engine-status');
         const btn = document.getElementById('photo-convert-btn');
         let loaded = [];
-
-        // 1. Load heic-to (優先)
         let heicToLoaded = false;
-        for (const url of libs.heicTo) {
-            try {
-                await loadScript(url);
-                if (typeof HeicTo !== 'undefined' || typeof window.heicTo !== 'undefined') {
-                    heicToLoaded = true;
-                    loaded.push("heic-to");
-                    break;
-                }
-            } catch (e) { console.warn("Failed to load:", url); }
-        }
-
-        // 2. Load heic2any (バックアップ)
+        for (const url of libs.heicTo) { try { await loadScript(url); if (typeof HeicTo !== 'undefined' || typeof window.heicTo !== 'undefined') { heicToLoaded = true; loaded.push("heic-to"); break; } } catch (e) {} }
         let heic2anyLoaded = false;
-        for (const url of libs.heic2any) {
-            try {
-                await loadScript(url);
-                if (typeof heic2any !== 'undefined') {
-                    heic2anyLoaded = true;
-                    loaded.push("heic2any");
-                    break;
-                }
-            } catch (e) { console.warn("Failed to load:", url); }
-        }
+        for (const url of libs.heic2any) { try { await loadScript(url); if (typeof heic2any !== 'undefined') { heic2anyLoaded = true; loaded.push("heic2any"); break; } } catch (e) {} }
 
         if (heicToLoaded || heic2anyLoaded) {
-            // 成功時: 静かにボタンを有効化 (アラートは表示しない)
             statusEl.style.display = 'none'; 
-            
-            btn.disabled = false;
-            btn.innerText = "変換開始";
-            btn.classList.remove('btn-secondary');
-            btn.classList.add('btn-success');
+            btn.disabled = false; btn.innerText = "変換開始"; btn.classList.remove('btn-secondary'); btn.classList.add('btn-success');
         } else {
-            // エラー時: 赤いアラートを表示
             statusEl.style.display = 'block';
             statusEl.className = 'alert alert-danger py-2 text-center small';
             statusEl.innerHTML = `<strong>❌ 読み込み失敗:</strong> セキュリティ制限により画像変換エンジンがすべてブロックされました。`;
         }
     }
-
     initEngines();
 </script>
 
 <script>
-    // --- グローバル変数 ---
     let objectUrls = [];
-    let convertedVideos = []; 
-    let convertedPhotos = [];
-    let convertedPdfs = [];
+    const { createFFmpeg, fetchFile } = FFmpeg;
+    let ffmpeg = null;
 
-    // --- ユーティリティ ---
-    function cleanUpObjectUrls() {
-        objectUrls.forEach(url => URL.revokeObjectURL(url));
-        objectUrls = [];
-    }
+    function cleanUpObjectUrls() { objectUrls.forEach(url => URL.revokeObjectURL(url)); objectUrls = []; }
     
     function addResultRow(containerId, fileName, statusText, statusClass, rowId, tags = []) {
         const container = document.getElementById(containerId);
         if(container.querySelector('.text-muted') || container.innerHTML === '') container.innerHTML = ''; 
-        
         let tagHtml = '';
         tags.forEach(tag => {
             const colorClass = tag.type === 'danger' ? 'tag-danger' : (tag.type === 'safe' ? 'tag-safe' : 'tag-warning');
             tagHtml += `<span class="${colorClass}">${tag.text}</span>`;
         });
-
         const div = document.createElement('div');
-        div.className = 'result-item';
-        div.id = rowId;
-        div.innerHTML = `
-            <div class="d-flex align-items-center overflow-hidden">
-                <div class="text-truncate fw-bold" style="max-width: 300px;">${fileName}</div>
-                ${tagHtml}
-            </div>
-            <div class="d-flex align-items-center">
-                <span class="status-badge ${statusClass} me-3" id="${rowId}-status">${statusText}</span>
-            </div>
-        `;
+        div.className = 'result-item'; div.id = rowId;
+        div.innerHTML = `<div class="d-flex align-items-center overflow-hidden"><div class="text-truncate fw-bold" style="max-width: 300px;">${fileName}</div>${tagHtml}</div><div class="d-flex align-items-center"><span class="status-badge ${statusClass} me-3" id="${rowId}-status">${statusText}</span></div>`;
         container.appendChild(div);
     }
-
     function updateResultRow(rowId, statusText, statusClass) {
         const badge = document.getElementById(`${rowId}-status`);
         if(badge) { badge.className = `status-badge ${statusClass} me-3`; badge.innerText = statusText; }
     }
-
     function selectMode(mode) {
         document.getElementById('mode-' + mode).checked = true;
         document.querySelectorAll('.mode-card').forEach(el => el.classList.remove('selected'));
@@ -282,339 +244,233 @@
         document.querySelectorAll('.description-box').forEach(el => el.style.display = 'none');
         document.getElementById('desc-' + mode).style.display = 'block';
     }
-
     function updateDownloadButtons(count, singleBtnId, zipBtnId) {
         const singleBtn = document.getElementById(singleBtnId);
         const zipBtn = document.getElementById(zipBtnId);
         if (count === 1) {
-            singleBtn.style.display = 'inline-block';
-            zipBtn.disabled = true;
-            zipBtn.classList.add('btn-secondary'); zipBtn.classList.remove('btn-success');
+            singleBtn.style.display = 'inline-block'; zipBtn.disabled = true; zipBtn.classList.add('btn-secondary'); zipBtn.classList.remove('btn-success');
         } else {
-            singleBtn.style.display = 'none';
-            zipBtn.disabled = false;
-            zipBtn.classList.remove('btn-secondary'); zipBtn.classList.add('btn-success');
+            singleBtn.style.display = 'none'; zipBtn.disabled = false; zipBtn.classList.remove('btn-secondary'); zipBtn.classList.add('btn-success');
         }
     }
 
+    const ensureFFmpegLoaded = async () => {
+        if (ffmpeg === null) {
+            ffmpeg = createFFmpeg({ log: true });
+            await ffmpeg.load();
+        } else if (!ffmpeg.isLoaded()) {
+            await ffmpeg.load();
+        }
+    };
+
     // --- 動画用 事前診断 ---
     async function scanFiles(inputElement) {
-        const list = document.getElementById('video-result-list');
-        list.innerHTML = '';
+        const list = document.getElementById('video-result-list'); list.innerHTML = '';
         const files = Array.from(inputElement.files);
         for (let i = 0; i < files.length; i++) {
-            const file = files[i];
-            const tags = [];
-            const name = file.name.toUpperCase();
-            const ext = name.split('.').pop();
-            const dvrExts = ['DAV', 'H264', '264', 'DAT', 'VOB'];
-            let isLegacy = dvrExts.includes(ext);
-            if (!isLegacy) {
-                try {
-                    const format = await checkContainerSignature(file);
-                    if (format) isLegacy = true;
-                } catch(e) { console.error(e); }
-            }
+            const file = files[i]; const tags = []; const name = file.name.toUpperCase(); const ext = name.split('.').pop();
+            const dvrExts = ['DAV', 'H264', '264', 'DAT', 'VOB']; let isLegacy = dvrExts.includes(ext);
+            if (!isLegacy) { try { const format = await checkContainerSignature(file); if (format) isLegacy = true; } catch(e) {} }
             if (isLegacy) tags.push({ text: '⚠️ MP4再変換モード推奨', type: 'warning' });
-            if (ext === 'MP4' || ext === 'MOV') {
-                try {
-                    const isHevc = await checkHevcBinary(file);
-                    if (isHevc) tags.push({ text: '⚠️ MP4再変換モード必須', type: 'danger' });
-                } catch(e) { console.error("Scan err:", e); }
-            }
+            if (ext === 'MP4' || ext === 'MOV') { try { const isHevc = await checkHevcBinary(file); if (isHevc) tags.push({ text: '⚠️ MP4再変換モード必須', type: 'danger' }); } catch(e) {} }
             addResultRow('video-result-list', file.name, '待機中', 'status-waiting', `v-row-${i}`, tags);
         }
     }
-    
-    // バイナリチェック用ユーティリティ
     async function checkContainerSignature(file) {
         return new Promise((resolve) => {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const arr = new Uint8Array(e.target.result);
-                const hex = Array.from(arr).map(b => b.toString(16).padStart(2,'0').toUpperCase()).join('');
-                if (hex.startsWith('52494646') && hex.includes('41564920')) resolve('AVI');
-                else if (hex.startsWith('1A45DFA3')) resolve('MKV');
-                else if (hex.startsWith('464C56')) resolve('FLV');
-                else if (hex.startsWith('47')) resolve('TS');
-                else if (hex.startsWith('000001BA')) resolve('MPG');
-                else resolve(null);
-            };
-            reader.onerror = () => resolve(null);
-            reader.readAsArrayBuffer(file.slice(0, 32));
+            const reader = new FileReader(); reader.onload = (e) => {
+                const arr = new Uint8Array(e.target.result); const hex = Array.from(arr).map(b => b.toString(16).padStart(2,'0').toUpperCase()).join('');
+                if (hex.startsWith('52494646') && hex.includes('41564920')) resolve('AVI'); else if (hex.startsWith('1A45DFA3')) resolve('MKV'); else if (hex.startsWith('464C56')) resolve('FLV'); else if (hex.startsWith('47')) resolve('TS'); else if (hex.startsWith('000001BA')) resolve('MPG'); else resolve(null);
+            }; reader.onerror = () => resolve(null); reader.readAsArrayBuffer(file.slice(0, 32));
         });
     }
     async function checkHevcBinary(file) {
         const CHUNK_SIZE = 2 * 1024 * 1024;
         const scanChunk = (start, end) => {
             return new Promise((resolve) => {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const arr = new Uint8Array(e.target.result);
-                    const signatures = [
-                        [0x68, 0x76, 0x63, 0x31], [0x68, 0x65, 0x76, 0x31], 
-                        [0x64, 0x76, 0x68, 0x65], [0x64, 0x76, 0x68, 0x31]  
-                    ];
-                    for (let i = 0; i < arr.length - 4; i++) {
-                        for (let sig of signatures) {
-                            if (arr[i] === sig[0] && arr[i+1] === sig[1] && arr[i+2] === sig[2] && arr[i+3] === sig[3]) {
-                                resolve(true); return;
-                            }
-                        }
-                    }
-                    resolve(false);
-                };
-                reader.onerror = () => resolve(false);
-                const slice = file.slice(start, end);
-                reader.readAsArrayBuffer(slice);
+                const reader = new FileReader(); reader.onload = (e) => {
+                    const arr = new Uint8Array(e.target.result); const signatures = [[0x68, 0x76, 0x63, 0x31], [0x68, 0x65, 0x76, 0x31], [0x64, 0x76, 0x68, 0x65], [0x64, 0x76, 0x68, 0x31]];
+                    for (let i = 0; i < arr.length - 4; i++) { for (let sig of signatures) { if (arr[i] === sig[0] && arr[i+1] === sig[1] && arr[i+2] === sig[2] && arr[i+3] === sig[3]) { resolve(true); return; } } } resolve(false);
+                }; reader.onerror = () => resolve(false); const slice = file.slice(start, end); reader.readAsArrayBuffer(slice);
             });
         };
-        let found = await scanChunk(0, CHUNK_SIZE);
-        if (found) return true;
-        if (file.size > CHUNK_SIZE) found = await scanChunk(file.size - CHUNK_SIZE, file.size);
-        return found;
+        let found = await scanChunk(0, CHUNK_SIZE); if (found) return true; if (file.size > CHUNK_SIZE) found = await scanChunk(file.size - CHUNK_SIZE, file.size); return found;
     }
 
-    // --- 1. 動画変換 ---
-    const { createFFmpeg, fetchFile } = FFmpeg;
-    let ffmpeg = null;
-    let progressUpdated = false;
-
-    const ensureFFmpegLoaded = async () => {
-        const btnText = document.getElementById('btn-text');
-        if (ffmpeg === null) {
-            btnText.innerText = 'エンジン初期化中...';
-            ffmpeg = createFFmpeg({ log: true });
-            ffmpeg.setProgress(({ ratio }) => {
-                if (ratio > 0) progressUpdated = true;
-                if (window.currentProcessingRowId) {
-                    const percent = Math.min(Math.max(Math.round(ratio * 100), 0), 100);
-                    const badge = document.getElementById(`${window.currentProcessingRowId}-status`);
-                    if(badge) badge.innerText = `処理中 ${percent}%`;
-                }
-            });
-            await ffmpeg.load();
-        } else if (!ffmpeg.isLoaded()) {
-            btnText.innerText = 'エンジン再ロード中...';
-            await ffmpeg.load();
-        }
-    };
-
+    // --- 動画変換 ---
     document.getElementById('video-convert-btn').addEventListener('click', async () => {
-        const fileInput = document.getElementById('video-uploader');
-        const mode = document.querySelector('input[name="videoMode"]:checked');
-        const btn = document.getElementById('video-convert-btn');
-        const btnText = document.getElementById('btn-text');
-        const saveArea = document.getElementById('video-save-area');
-        
-        if (fileInput.files.length === 0) { alert('ファイルを選択してください'); return; }
-        if (!mode) { alert('モードを選択してください'); return; }
-
+        const fileInput = document.getElementById('video-uploader'); const mode = document.querySelector('input[name="videoMode"]:checked');
+        const btn = document.getElementById('video-convert-btn'); const btnText = document.getElementById('btn-text'); const saveArea = document.getElementById('video-save-area');
+        if (fileInput.files.length === 0) { alert('ファイルを選択してください'); return; } if (!mode) { alert('モードを選択してください'); return; }
         try {
-            btn.disabled = true;
-            await ensureFFmpegLoaded();
-            btnText.innerText = '変換中...';
-            saveArea.style.display = 'none';
-            cleanUpObjectUrls();
-            convertedVideos = [];
-
+            btn.disabled = true; await ensureFFmpegLoaded(); btnText.innerText = '変換中...'; saveArea.style.display = 'none'; cleanUpObjectUrls(); convertedVideos = [];
             const files = Array.from(fileInput.files);
             for (let i = 0; i < files.length; i++) {
-                const file = files[i];
-                const rowId = `v-row-${i}`;
-                const inputName = `in_${i}`;
-                const outputName = `out_${i}.mp4`;
-                window.currentProcessingRowId = rowId;
-                updateResultRow(rowId, '準備中...', 'status-processing');
-                progressUpdated = false;
-                const timeoutPromise = new Promise((_, reject) => {
-                    setTimeout(() => { if (!progressUpdated) reject(new Error("FREEZE_DETECTED")); }, 15000); 
-                });
-
+                const file = files[i]; const rowId = `v-row-${i}`; const inputName = `in_${i}`; const outputName = `out_${i}.mp4`;
+                window.currentProcessingRowId = rowId; updateResultRow(rowId, '準備中...', 'status-processing');
                 try {
                     ffmpeg.FS('writeFile', inputName, await fetchFile(file));
-                    let command = [];
-                    if (mode.value === 'rewrap') {
-                        command = ['-fflags', '+genpts', '-i', inputName, '-c', 'copy', '-map', '0', '-ignore_unknown', outputName];
-                    } else {
-                        command = ['-i', inputName, '-map', '0:v:0?', '-map', '0:a:0?', '-vf', 'scale=trunc(iw/2)*2:trunc(ih/2)*2', '-r', '30000/1001', '-pix_fmt', 'yuv420p', '-c:v', 'libx264', '-preset', 'superfast', '-c:a', 'aac', '-ar', '48000', outputName];
-                    }
-                    await Promise.race([ffmpeg.run(...command), timeoutPromise]);
-                    const data = ffmpeg.FS('readFile', outputName);
-                    if (data.byteLength < 1000) throw new Error("EMPTY_FILE");
-                    const blob = new Blob([data.buffer], { type: 'video/mp4' });
-                    const newFileName = `converted_${file.name.replace(/\.[^/.]+$/, "")}.mp4`;
-                    convertedVideos.push({ name: newFileName, blob: blob });
+                    let command = (mode.value === 'rewrap') ? ['-fflags', '+genpts', '-i', inputName, '-c', 'copy', '-map', '0', '-ignore_unknown', outputName] : ['-i', inputName, '-map', '0:v:0?', '-map', '0:a:0?', '-vf', 'scale=trunc(iw/2)*2:trunc(ih/2)*2', '-r', '30000/1001', '-pix_fmt', 'yuv420p', '-c:v', 'libx264', '-preset', 'superfast', '-c:a', 'aac', '-ar', '48000', outputName];
+                    await ffmpeg.run(...command);
+                    const data = ffmpeg.FS('readFile', outputName); const blob = new Blob([data.buffer], { type: 'video/mp4' });
+                    convertedVideos.push({ name: `converted_${file.name.replace(/\.[^/.]+$/, "")}.mp4`, blob: blob });
                     updateResultRow(rowId, '完了', 'status-success');
                     try { ffmpeg.FS('unlink', inputName); ffmpeg.FS('unlink', outputName); } catch(e){}
-                } catch (err) {
-                    console.error(err);
-                    if (err.message === "FREEZE_DETECTED") updateResultRow(rowId, '非対応(10bit等)', 'status-warning');
-                    else if (err.message === "EMPTY_FILE") updateResultRow(rowId, '失敗(データ空)', 'status-error');
-                    else updateResultRow(rowId, 'エラー', 'status-error');
-                    try { ffmpeg.FS('unlink', inputName); ffmpeg.FS('unlink', outputName); } catch(e){}
-                }
+                } catch (err) { console.error(err); updateResultRow(rowId, 'エラー', 'status-error'); }
             }
-            window.currentProcessingRowId = null;
-            try { await ffmpeg.exit(); ffmpeg = null; } catch(e){}
-            btnText.innerText = '変換開始';
-            btn.disabled = false;
-            updateDownloadButtons(convertedVideos.length, 'video-single-btn', 'video-zip-btn');
-            if(convertedVideos.length > 0) saveArea.style.display = 'block';
-        } catch (globalErr) {
-            console.error(globalErr);
-            alert("エラーが発生しました。");
-            btn.disabled = false;
-        }
+            btnText.innerText = '変換開始'; btn.disabled = false; updateDownloadButtons(convertedVideos.length, 'video-single-btn', 'video-zip-btn'); if(convertedVideos.length > 0) saveArea.style.display = 'block';
+        } catch (e) { console.error(e); alert("エラー"); btn.disabled = false; }
     });
     document.getElementById('video-single-btn').onclick = function() { if (convertedVideos.length > 0) { const f = convertedVideos[0]; const url = URL.createObjectURL(f.blob); objectUrls.push(url); saveAs(f.blob, f.name); } };
     document.getElementById('video-zip-btn').onclick = function() { const zip = new JSZip(); convertedVideos.forEach(f => zip.file(f.name, f.blob)); zip.generateAsync({type:"blob"}).then(c => saveAs(c, "video_converted.zip")); };
 
-    // --- 2. 写真変換 (Auto-Fallback Implementation) ---
+    // --- 写真変換 ---
+    let convertedPhotos = [];
     document.getElementById('photo-convert-btn').addEventListener('click', async () => {
-        const fileInput = document.getElementById('photo-uploader');
-        const btn = document.getElementById('photo-convert-btn');
-        const saveArea = document.getElementById('photo-save-area');
-
-        // Check if engines are ready
-        const hasHeicTo = (typeof HeicTo !== 'undefined' || typeof window.heicTo !== 'undefined');
-        const hasHeic2any = (typeof heic2any !== 'undefined');
-
-        if (!hasHeicTo && !hasHeic2any) {
-            alert("変換エンジンがロードされていません。リロードしてください。");
-            return;
-        }
-
+        const fileInput = document.getElementById('photo-uploader'); const btn = document.getElementById('photo-convert-btn'); const saveArea = document.getElementById('photo-save-area');
+        const hasHeicTo = (typeof HeicTo !== 'undefined' || typeof window.heicTo !== 'undefined'); const hasHeic2any = (typeof heic2any !== 'undefined');
+        if (!hasHeicTo && !hasHeic2any) { alert("エンジン未ロード"); return; }
         if (fileInput.files.length === 0) { alert('選択してください'); return; }
-
-        btn.disabled = true;
-        saveArea.style.display = 'none';
-        document.getElementById('photo-result-list').innerHTML = '';
-        convertedPhotos = [];
+        btn.disabled = true; saveArea.style.display = 'none'; document.getElementById('photo-result-list').innerHTML = ''; convertedPhotos = [];
         const files = Array.from(fileInput.files);
-        
         files.forEach((file, i) => addResultRow('photo-result-list', file.name, '待機中', 'status-waiting', `p-row-${i}`));
-
         for (let i = 0; i < files.length; i++) {
-            const rowId = `p-row-${i}`;
-            const file = files[i];
-            let success = false;
-            
-            // --- Priority 1: heic-to (Better support) ---
+            const rowId = `p-row-${i}`; const file = files[i]; let success = false;
             if (hasHeicTo) {
-                try {
-                    updateResultRow(rowId, '変換中(v1)...', 'status-processing');
-                    // heic-to v1.3 usage
-                    const heicToFunc = window.HeicTo || window.heicTo;
-                    const blob = await heicToFunc({
-                        blob: file,
-                        type: "image/jpeg",
-                        quality: 0.9
-                    });
-                    finishPhoto(file.name, blob, rowId);
-                    success = true;
-                } catch (err) {
-                    console.warn("heic-to failed, trying fallback...", err);
-                    updateResultRow(rowId, '救済中...', 'status-retry');
-                }
+                try { updateResultRow(rowId, '変換中...', 'status-processing'); const h = window.HeicTo || window.heicTo; const b = await h({ blob: file, type: "image/jpeg", quality: 0.9 }); convertedPhotos.push({ name: file.name.replace(/\.[^/.]+$/, "") + ".jpg", blob: b }); updateResultRow(rowId, '完了', 'status-success'); success = true; } catch (e) {}
             }
-
-            // --- Priority 2: heic2any (Fallback) ---
             if (!success && hasHeic2any) {
-                try {
-                    updateResultRow(rowId, '変換中(v2)...', 'status-processing');
-                    const resultBlob = await heic2any({ 
-                        blob: file, 
-                        toType: "image/jpeg", 
-                        quality: 0.9 
-                    });
-                    const finalBlob = Array.isArray(resultBlob) ? resultBlob[0] : resultBlob;
-                    finishPhoto(file.name, finalBlob, rowId);
-                    success = true;
-                } catch (err) {
-                    console.error("heic2any also failed", err);
-                }
+                try { const r = await heic2any({ blob: file, toType: "image/jpeg", quality: 0.9 }); const b = Array.isArray(r) ? r[0] : r; convertedPhotos.push({ name: file.name.replace(/\.[^/.]+$/, "") + ".jpg", blob: b }); updateResultRow(rowId, '完了', 'status-success'); success = true; } catch (e) {}
             }
-
-            if (!success) {
-                updateResultRow(rowId, '変換失敗', 'status-error');
-            }
+            if (!success) updateResultRow(rowId, '変換失敗', 'status-error');
         }
-        
-        btn.disabled = false;
-        updateDownloadButtons(convertedPhotos.length, 'photo-single-btn', 'photo-zip-btn');
-        if (convertedPhotos.length > 0) saveArea.style.display = 'block';
+        btn.disabled = false; updateDownloadButtons(convertedPhotos.length, 'photo-single-btn', 'photo-zip-btn'); if (convertedPhotos.length > 0) saveArea.style.display = 'block';
     });
-
-    function finishPhoto(originalName, blob, rowId) {
-        const newName = originalName.replace(/\.[^/.]+$/, "") + ".jpg";
-        convertedPhotos.push({ name: newName, blob: blob });
-        updateResultRow(rowId, '完了', 'status-success');
-    }
-
     document.getElementById('photo-single-btn').onclick = function() { if (convertedPhotos.length > 0) saveAs(convertedPhotos[0].blob, convertedPhotos[0].name); };
     document.getElementById('photo-zip-btn').onclick = function() { const zip = new JSZip(); convertedPhotos.forEach(f => zip.file(f.name, f.blob)); zip.generateAsync({type:"blob"}).then(c => saveAs(c, "photo_converted.zip")); };
 
-    // --- 3. PDF変換 ---
+    // --- PDF変換 ---
+    let convertedPdfs = [];
     document.getElementById('pdf-convert-btn').addEventListener('click', async () => {
-        const fileInput = document.getElementById('pdf-uploader');
-        const format = document.querySelector('input[name="pdfFormat"]:checked').value;
-        const btn = document.getElementById('pdf-convert-btn');
-        const saveArea = document.getElementById('pdf-save-area');
-
+        const fileInput = document.getElementById('pdf-uploader'); const format = document.querySelector('input[name="pdfFormat"]:checked').value; const btn = document.getElementById('pdf-convert-btn'); const saveArea = document.getElementById('pdf-save-area');
         if (fileInput.files.length === 0) { alert('PDFを選択してください'); return; }
-
-        btn.disabled = true;
-        saveArea.style.display = 'none';
-        document.getElementById('pdf-result-list').innerHTML = '';
-        convertedPdfs = [];
-
+        btn.disabled = true; saveArea.style.display = 'none'; document.getElementById('pdf-result-list').innerHTML = ''; convertedPdfs = [];
         const files = Array.from(fileInput.files);
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
             try {
-                const arrayBuffer = await file.arrayBuffer();
-                const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
-                if (pdf.numPages > 30) addResultRow('pdf-result-list', file.name, `警告: ${pdf.numPages}ページ`, 'status-error', `pdf-warn-${i}`);
-
+                const arrayBuffer = await file.arrayBuffer(); const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
                 for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-                    const rowId = `pdf-${i}-page-${pageNum}`;
-                    const fileName = `${file.name} (P.${pageNum})`;
-                    addResultRow('pdf-result-list', fileName, 'レンダリング中...', 'status-processing', rowId);
-                    await new Promise(r => setTimeout(r, 10));
-
-                    const page = await pdf.getPage(pageNum);
-                    const viewport = page.getViewport({ scale: 2.0 });
-                    const canvas = document.createElement('canvas');
-                    const context = canvas.getContext('2d');
-                    canvas.height = viewport.height;
-                    canvas.width = viewport.width;
+                    const rowId = `pdf-${i}-page-${pageNum}`; addResultRow('pdf-result-list', `${file.name} (P.${pageNum})`, '変換中', 'status-processing', rowId);
+                    const page = await pdf.getPage(pageNum); const viewport = page.getViewport({ scale: 2.0 });
+                    const canvas = document.createElement('canvas'); const context = canvas.getContext('2d'); canvas.height = viewport.height; canvas.width = viewport.width;
                     await page.render({ canvasContext: context, viewport: viewport }).promise;
-
-                    const mimeType = format === 'png' ? 'image/png' : 'image/jpeg';
-                    const ext = format === 'png' ? '.png' : '.jpg';
-                    
-                    await new Promise(resolve => {
-                        canvas.toBlob((blob) => {
-                            const outputName = file.name.replace(/\.pdf$/i, "") + `_page${String(pageNum).padStart(2, '0')}` + ext;
-                            convertedPdfs.push({ name: outputName, blob: blob });
-                            updateResultRow(rowId, '完了', 'status-success');
-                            resolve();
-                        }, mimeType, 0.9);
-                    });
+                    await new Promise(r => canvas.toBlob(b => { convertedPdfs.push({ name: file.name.replace(/\.pdf$/i, "") + `_page${String(pageNum).padStart(2, '0')}.${format === 'png'?'png':'jpg'}`, blob: b }); updateResultRow(rowId, '完了', 'status-success'); r(); }, format==='png'?'image/png':'image/jpeg', 0.9));
                 }
-            } catch (err) {
-                console.error(err);
-                addResultRow('pdf-result-list', file.name, 'エラー', 'status-error', `pdf-err-${i}`);
-            }
+            } catch (e) { console.error(e); }
         }
-        btn.disabled = false;
-        updateDownloadButtons(convertedPdfs.length, 'pdf-single-btn', 'pdf-zip-btn');
-        saveArea.style.display = 'block';
+        btn.disabled = false; updateDownloadButtons(convertedPdfs.length, 'pdf-single-btn', 'pdf-zip-btn'); saveArea.style.display = 'block';
     });
-
     document.getElementById('pdf-single-btn').onclick = function() { if (convertedPdfs.length > 0) saveAs(convertedPdfs[0].blob, convertedPdfs[0].name); };
     document.getElementById('pdf-zip-btn').onclick = function() { const zip = new JSZip(); convertedPdfs.forEach(f => zip.file(f.name, f.blob)); zip.generateAsync({type:"blob"}).then(c => saveAs(c, "pdf_converted.zip")); };
+
+    // --- テロップ結合 (v11.0: AI Check Mode with Drawtext) ---
+    document.getElementById('telop-convert-btn').addEventListener('click', async () => {
+        const fileInput = document.getElementById('telop-uploader');
+        const resultArea = document.getElementById('telop-result-area');
+        const btn = document.getElementById('telop-convert-btn');
+        const progressBar = document.getElementById('telop-progress-bar').firstElementChild;
+        document.getElementById('telop-progress-bar').style.display = 'flex';
+
+        if (fileInput.files.length === 0) { alert("画像を選択してください"); return; }
+        
+        btn.disabled = true; btn.innerText = "生成中..."; 
+        resultArea.innerHTML = '<div class="spinner-border text-warning" role="status"></div><div class="mt-2">画像を加工中...</div>';
+        progressBar.style.width = '0%'; progressBar.innerText = '0%';
+        
+        try {
+            await ensureFFmpegLoaded();
+            
+            // 1. ソート
+            const files = Array.from(fileInput.files).sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
+            
+            // 2. 画像加工 (Canvasでファイル名書き込み)
+            for (let i = 0; i < files.length; i++) {
+                // 進捗更新
+                const p = Math.round((i / files.length) * 50); // 前半50%
+                progressBar.style.width = `${p}%`; progressBar.innerText = `加工中 ${p}%`;
+
+                // 画像読み込み
+                const imgBitmap = await createImageBitmap(files[i]);
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                // キャンバスサイズ設定
+                canvas.width = imgBitmap.width;
+                canvas.height = imgBitmap.height;
+                
+                // 画像描画
+                ctx.drawImage(imgBitmap, 0, 0);
+                
+                // --- ファイル名描画処理 ---
+                const fontSize = Math.max(24, Math.floor(canvas.height * 0.05)); // 高さの5%程度のフォントサイズ
+                ctx.font = `bold ${fontSize}px Arial, sans-serif`;
+                ctx.textBaseline = 'top';
+                
+                // 背景帯 (黒半透明)
+                const headerHeight = Math.floor(fontSize * 1.5);
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                ctx.fillRect(0, 0, canvas.width, headerHeight);
+                
+                // 文字色 (白)
+                ctx.fillStyle = '#ffffff';
+                ctx.fillText(`File: ${files[i].name}`, 10, (headerHeight - fontSize) / 2);
+                // -------------------------
+
+                // Blob化 -> FFmpegへ
+                const blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.95));
+                const newName = `img${String(i).padStart(3, '0')}.jpg`;
+                ffmpeg.FS('writeFile', newName, await fetchFile(blob));
+            }
+
+            // 3. 動画変換
+            progressBar.style.width = '75%'; progressBar.innerText = 'エンコード中...';
+            
+            // -framerate 2 (0.5秒/枚)
+            // -crf 28 (AI認識には十分な画質かつ軽量)
+            await ffmpeg.run(
+                '-framerate', '2', 
+                '-i', 'img%03d.jpg', 
+                '-c:v', 'libx264', 
+                '-pix_fmt', 'yuv420p', 
+                '-crf', '28', 
+                'output_check.mp4'
+            );
+
+            progressBar.style.width = '100%'; progressBar.innerText = '完了';
+
+            const data = ffmpeg.FS('readFile', 'output_check.mp4');
+            const blob = new Blob([data.buffer], { type: 'video/mp4' });
+            const url = URL.createObjectURL(blob);
+            
+            resultArea.innerHTML = `
+                <div class="alert alert-success fw-bold">✨ チェック用動画完成 (0.5秒/枚)</div>
+                <video src="${url}" controls class="w-100 mb-3" style="max-height: 300px; background:#000;"></video>
+                <a href="${url}" download="telop_check_ai.mp4" class="btn btn-success fw-bold px-5">⬇ 保存</a>
+            `;
+
+            // 掃除
+            for (let i = 0; i < files.length; i++) {
+                try { ffmpeg.FS('unlink', `img${String(i).padStart(3, '0')}.jpg`); } catch(e){}
+            }
+            try { ffmpeg.FS('unlink', 'output_check.mp4'); } catch(e){}
+
+        } catch(e) {
+            console.error(e);
+            resultArea.innerHTML = `<div class="alert alert-danger">エラーが発生しました: ${e.message}</div>`;
+        }
+        btn.disabled = false; btn.innerText = "動画を作成 (MP4)";
+    });
 </script>
 </body>
 </html>
