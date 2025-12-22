@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>メディア変換ツール v11.8</title>
+    <title>メディア変換ツール v12.0</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
-    
     <style>
         body { background-color: #f0f2f5; padding-top: 1.5rem; padding-bottom: 2rem; font-family: "Helvetica Neue", Arial, sans-serif; }
         .main-container { max-width: 900px; margin: 0 auto; background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.12); }
@@ -17,50 +16,33 @@
         .mode-card.selected { border-color: #0d6efd; background-color: #f0f7ff; }
         .result-item { background: #fff; border-bottom: 1px solid #eee; padding: 10px; display: flex; justify-content: space-between; align-items: center; }
         .result-item:last-child { border-bottom: none; }
-        
         .status-badge { font-size: 0.85rem; padding: 5px 12px; border-radius: 20px; min-width: 100px; text-align: center; display: inline-block; font-weight: bold;}
         .status-waiting { background: #eee; color: #666; }
         .status-processing { background: #cfe2ff; color: #084298; }
         .status-success { background: #d1e7dd; color: #0f5132; }
         .status-error { background: #f8d7da; color: #842029; }
-        
         .save-area { display: none; padding: 15px; background: #e0e7ff; border-top: 1px solid #c7d2fe; text-align: center; }
         .description-box { background-color: #fff3cd; border: 1px solid #ffecb5; padding: 15px; border-radius: 8px; margin-top: 15px; display: none; color: #664d03; }
-        
         .footer-info { margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid #eee; font-size: 0.85rem; color: #6c757d; }
         .footer-section-title { font-weight: bold; margin-bottom: 0.5rem; color: #343a40; display: flex; align-items: center; }
-        
-        /* 関連リンク用のスタイル */
         .related-links a { color: #6c757d; text-decoration: none; font-weight: bold; transition: color 0.2s; }
         .related-links a:hover { color: #0d6efd; text-decoration: underline; }
-        
         #engine-status { display: none; }
     </style>
 </head>
 <body>
 
 <div class="main-container">
-    <h3 class="mb-4 text-center fw-bold text-dark">メディア変換ツール v11.8</h3>
-    
+    <h3 class="mb-4 text-center fw-bold text-dark">メディア変換ツール v12.0</h3>
     <div id="engine-status" class="alert alert-danger py-2 text-center small"></div>
     
     <ul class="nav nav-pills nav-fill mb-4" id="myTab" role="tablist">
-        <li class="nav-item">
-            <button class="nav-link active" id="photo-tab" data-bs-toggle="tab" data-bs-target="#photo-pane" type="button">📷 HEIC画像</button>
-        </li>
-        <li class="nav-item">
-            <button class="nav-link" id="pdf-tab" data-bs-toggle="tab" data-bs-target="#pdf-pane" type="button">📄 PDF変換</button>
-        </li>
-        <li class="nav-item">
-            <button class="nav-link" id="video-tab" data-bs-toggle="tab" data-bs-target="#video-pane" type="button">🎥 動画変換</button>
-        </li>
-        <li class="nav-item">
-            <button class="nav-link" id="telop-tab" data-bs-toggle="tab" data-bs-target="#telop-pane" type="button">🎞️ テロップ結合＆AIチェック</button>
-        </li>
+        <li class="nav-item"><button class="nav-link active" id="photo-tab" data-bs-toggle="tab" data-bs-target="#photo-pane">📷 HEIC画像</button></li>
+        <li class="nav-item"><button class="nav-link" id="pdf-tab" data-bs-toggle="tab" data-bs-target="#pdf-pane">📄 PDF変換</button></li>
+        <li class="nav-item"><button class="nav-link" id="video-tab" data-bs-toggle="tab" data-bs-target="#video-pane">🎥 動画変換</button></li>
     </ul>
 
     <div class="tab-content" id="myTabContent">
-        
         <div class="tab-pane fade show active" id="photo-pane">
             <div class="mb-3"><input type="file" class="form-control" id="photo-uploader" accept=".heic,.HEIC" multiple></div>
             <button id="photo-convert-btn" class="btn btn-secondary w-100 py-2 fw-bold" disabled>エンジン準備中...</button>
@@ -75,7 +57,6 @@
                 </div>
             </div>
         </div>
-
         <div class="tab-pane fade" id="pdf-pane">
             <div class="pdf-settings p-3 bg-light rounded border mb-3">
                 <label class="form-label fw-bold mb-2">出力形式:</label>
@@ -97,39 +78,25 @@
                 </div>
             </div>
         </div>
-
         <div class="tab-pane fade" id="video-pane">
-            
             <div class="alert alert-warning py-3 mb-4 border-warning">
-                <div class="d-flex align-items-center mb-1">
-                    <span class="fs-5 me-2">⚠️</span>
-                    <h6 class="alert-heading fw-bold mb-0">本機能は「簡易版」です</h6>
-                </div>
-                <p class="mb-0 ms-1 small">
-                    ブラウザ上で動作するため、大容量ファイルや特殊な形式では処理が失敗することがあります。<br>
-                    動作が不安定な場合は、デスクトップ版の専用ソフト（HandBrake, Shutter Encoder, XMedia Recode 等）のご利用を推奨します。
-                </p>
+                <div class="d-flex align-items-center mb-1"><span class="fs-5 me-2">⚠️</span><h6 class="alert-heading fw-bold mb-0">本機能は「簡易版」です</h6></div>
+                <p class="mb-0 ms-1 small">ブラウザ上で動作するため、大容量ファイルでは失敗することがあります。デスクトップ版ソフト(HandBrake等)の利用を推奨します。</p>
             </div>
-
-            <div class="mb-3">
-                <label class="form-label fw-bold">1. ファイル選択 (複数OK)</label>
-                <input type="file" class="form-control" id="video-uploader" multiple onchange="scanFiles(this)">
-            </div>
+            <div class="mb-3"><input type="file" class="form-control" id="video-uploader" multiple onchange="scanFiles(this)"></div>
             <label class="form-label fw-bold">2. 変換モード</label>
             <div class="row">
                 <div class="col-md-4"><div class="mode-card" onclick="selectMode('rewrap')"><div class="form-check"><input class="form-check-input" type="radio" name="videoMode" id="mode-rewrap" value="rewrap"><label class="form-check-label fw-bold" for="mode-rewrap">コンテナ変換</label></div></div></div>
                 <div class="col-md-4"><div class="mode-card" onclick="selectMode('cfr')"><div class="form-check"><input class="form-check-input" type="radio" name="videoMode" id="mode-cfr" value="cfr"><label class="form-check-label fw-bold" for="mode-cfr">VFR → CFR</label></div></div></div>
                 <div class="col-md-4"><div class="mode-card" onclick="selectMode('reencode')"><div class="form-check"><input class="form-check-input" type="radio" name="videoMode" id="mode-reencode" value="reencode"><label class="form-check-label fw-bold" for="mode-reencode">MP4再変換</label></div></div></div>
             </div>
-            <div id="desc-rewrap" class="description-box"><strong>⚡ コンテナ変換:</strong> 爆速。箱だけ入替。※防犯カメラ等の特殊素材には不向きです。</div>
+            <div id="desc-rewrap" class="description-box"><strong>⚡ コンテナ変換:</strong> 爆速。箱だけ入替。</div>
             <div id="desc-cfr" class="description-box"><strong>🔄 フレームレート固定:</strong> 29.97fps＋偶数解像度化。EDIUS救済用。</div>
-            <div id="desc-reencode" class="description-box"><strong>🛠️ MP4再エンコード:</strong> 特殊形式を汎用MP4化。防犯カメラ・独自形式の救済に最適。</div>
+            <div id="desc-reencode" class="description-box"><strong>🛠️ MP4再エンコード:</strong> 特殊形式を汎用MP4化。防犯カメラ・独自形式の救済に。</div>
             <button id="video-convert-btn" class="btn btn-primary w-100 mt-4 py-2 fw-bold"><span id="btn-text">変換開始</span></button>
             <div class="card mt-4">
                 <div class="card-header bg-light fw-bold">動画変換リスト</div>
-                <div id="video-result-list" class="card-body p-0">
-                    <div class="text-center text-muted p-3">ここに選択したファイルが表示されます</div>
-                </div>
+                <div id="video-result-list" class="card-body p-0"><div class="text-center text-muted p-3">ここに選択したファイルが表示されます</div></div>
                 <div id="video-save-area" class="save-area">
                     <div class="d-flex justify-content-center gap-3">
                         <button id="video-single-btn" class="btn btn-success fw-bold px-4" style="display:none;">⬇ 保存</button>
@@ -138,57 +105,21 @@
                 </div>
             </div>
         </div>
-
-        <div class="tab-pane fade" id="telop-pane">
-            
-            <div class="alert alert-primary py-3 mb-4">
-                <div class="d-flex align-items-center mb-1">
-                    <span class="fs-4 me-2">🤖</span>
-                    <h6 class="alert-heading fw-bold mb-0">テロップ動画変換 ＆ AI一括チェック</h6>
-                </div>
-                <p class="mb-0 ms-1 small">
-                    複数のテロップ画像（PNG/JPG）を読み込んで1本の動画ファイルに結合します。<br>
-                    その動画をAI（Gemini）に読み込ませることで、<strong>誤字脱字や固有名詞の誤りを自動で一括チェック</strong>できます。
-                </p>
-            </div>
-            
-            <div class="mb-3">
-                <label class="form-label fw-bold">1. テロップ画像選択 (PNG/JPG)</label>
-                <input type="file" class="form-control" id="telop-uploader" accept="image/*" multiple>
-            </div>
-
-            <button id="telop-convert-btn" class="btn btn-warning w-100 py-2 fw-bold text-dark">動画を作成 (MP4)</button>
-            <div id="telop-progress-bar" class="progress mt-3" style="display:none; height: 25px;">
-                <div class="progress-bar progress-bar-striped progress-bar-animated bg-warning text-dark fw-bold" role="progressbar" style="width: 0%">0%</div>
-            </div>
-            
-            <div class="card mt-4">
-                <div class="card-header bg-light fw-bold">作成結果</div>
-                <div id="telop-result-area" class="card-body text-center p-4">
-                    <div class="text-muted">ここに結果が表示されます</div>
-                </div>
-            </div>
-        </div>
-
     </div>
     
     <div class="footer-info">
         <div class="row">
             <div class="col-md-6 mb-3">
                 <div class="footer-section-title text-success">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-shield-lock-fill me-2" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8 0c-.69 0-1.843.265-2.928.56-1.11.3-2.229.655-2.887.87a1.54 1.54 0 0 0-1.044 1.262c-.596 4.477.787 7.795 2.465 9.99a11.777 11.777 0 0 0 2.517 2.453c.386.273.744.482 1.048.625.28.132.581.24.829.24s.548-.108.829-.24a7.159 7.159 0 0 0 1.048-.625 11.775 11.775 0 0 0 2.517-2.453c1.678-2.195 3.061-5.513 2.465-9.99a1.541 1.541 0 0 0-1.044-1.263 62.467 62.467 0 0 0-2.887-.87C9.843.266 8.69 0 8 0zm0 5a1.5 1.5 0 0 1 .5 2.915l.385 1.99a.5.5 0 0 1-.491.595h-.788a.5.5 0 0 1-.49-.595l.384-1.99A1.5 1.5 0 0 1 8 5z"/></svg>
-                    セキュリティとプライバシー
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-shield-lock-fill me-2" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8 0c-.69 0-1.843.265-2.928.56-1.11.3-2.229.655-2.887.87a1.54 1.54 0 0 0-1.044 1.262c-.596 4.477.787 7.795 2.465 9.99a11.777 11.777 0 0 0 2.517 2.453c.386.273.744.482 1.048.625.28.132.581.24.829.24s.548-.108.829-.24a7.159 7.159 0 0 0 1.048-.625 11.775 11.775 0 0 0 2.517-2.453c1.678-2.195 3.061-5.513 2.465-9.99a1.541 1.541 0 0 0-1.044-1.263 62.467 62.467 0 0 0-2.887-.87C9.843.266 8.69 0 8 0zm0 5a1.5 1.5 0 0 1 .5 2.915l.385 1.99a.5.5 0 0 1-.491.595h-.788a.5.5 0 0 1-.49-.595l.384-1.99A1.5 1.5 0 0 1 8 5z"/></svg>セキュリティとプライバシー
                 </div>
-                <p class="mb-0">本ツールは、すべての変換処理を<strong>ブラウザ内（ローカル環境）</strong>で完結して行います。映像・画像・PDFなどの素材データが、外部のサーバーに送信・保存されることは一切ありません。</p>
+                <p class="mb-0">本ツールは、すべての変換処理をブラウザ内（ローカル環境）で完結して行います。</p>
             </div>
             <div class="col-md-6 mb-3">
                 <div class="footer-section-title">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-code-square me-2" viewBox="0 0 16 16"><path d="M14 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h12zM2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2z"/><path d="M6.854 4.646a.5.5 0 0 1 0 .708L4.207 8l2.647 2.646a.5.5 0 0 1-.708.708l-3-3a.5.5 0 0 1 0-.708l3-3a.5.5 0 0 1 .708 0zm2.292 0a.5.5 0 0 0 0 .708L11.793 8l-2.647 2.646a.5.5 0 0 0 .708.708l3-3a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708 0z"/></svg>
-                    License Info
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-code-square me-2" viewBox="0 0 16 16"><path d="M14 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h12zM2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2z"/><path d="M6.854 4.646a.5.5 0 0 1 0 .708L4.207 8l2.647 2.646a.5.5 0 0 1-.708.708l-3-3a.5.5 0 0 1 0-.708l3-3a.5.5 0 0 1 .708 0zm2.292 0a.5.5 0 0 0 0 .708L11.793 8l-2.647 2.646a.5.5 0 0 0 .708.708l3-3a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708 0z"/></svg>License Info
                 </div>
-                <ul class="list-unstyled mb-0" style="columns: 2; font-size: 0.8rem;">
-                    <li>• FFmpeg (LGPL/GPL)</li><li>• Bootstrap (MIT)</li><li>• JSZip (MIT)</li><li>• FileSaver.js (MIT)</li><li>• heic2any (MIT)</li><li>• heic-to (MIT)</li><li>• PDF.js (Apache 2.0)</li>
-                </ul>
+                <ul class="list-unstyled mb-0" style="columns: 2; font-size: 0.8rem;"><li>• FFmpeg (LGPL/GPL)</li><li>• Bootstrap (MIT)</li><li>• JSZip (MIT)</li><li>• FileSaver.js (MIT)</li><li>• heic2any (MIT)</li><li>• heic-to (MIT)</li><li>• PDF.js (Apache 2.0)</li></ul>
             </div>
         </div>
     </div>
@@ -197,303 +128,48 @@
 <div class="text-center mt-4 mb-5 text-muted related-links">
     <small class="fw-bold mb-2 d-block text-uppercase" style="letter-spacing: 1px;">Other Tools</small>
     <div class="d-flex justify-content-center gap-4">
-        <a href="https://yueda-spec.github.io/V-checker/" target="_blank">
-            📺 V-checker
-        </a>
-        <a href="https://yueda-spec.github.io/ToolKit/" target="_blank">
-            🧮 計算ツールキット
-        </a>
+        <a href="telop.html">🎞️ AIテロップチェッカー</a>
+        <a href="https://yueda-spec.github.io/V-checker/" target="_blank">📺 V-checker</a>
+        <a href="https://yueda-spec.github.io/ToolKit/" target="_blank">🧮 計算ツールキット</a>
     </div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-
 <script type="module">
     import * as pdfjsLib from 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.3.136/pdf.min.mjs';
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.3.136/pdf.worker.min.mjs';
     window.pdfjsLib = pdfjsLib;
 </script>
-
 <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
-
 <script>
-    const libs = {
-        heicTo: [ "https://cdn.jsdelivr.net/npm/heic-to@1.3.0/dist/iife/heic-to.js", "https://unpkg.com/heic-to@1.3.0/dist/iife/heic-to.js" ],
-        heic2any: [ "https://cdnjs.cloudflare.com/ajax/libs/heic2any/0.0.4/heic2any.min.js", "https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js" ]
-    };
-    function loadScript(url) {
-        return new Promise((resolve, reject) => {
-            const script = document.createElement('script');
-            script.src = url; script.onload = () => resolve(true); script.onerror = () => reject(false);
-            document.head.appendChild(script);
-        });
-    }
-    async function initEngines() {
-        const statusEl = document.getElementById('engine-status');
-        const btn = document.getElementById('photo-convert-btn');
-        let loaded = [];
-        let heicToLoaded = false;
-        for (const url of libs.heicTo) { try { await loadScript(url); if (typeof HeicTo !== 'undefined' || typeof window.heicTo !== 'undefined') { heicToLoaded = true; loaded.push("heic-to"); break; } } catch (e) {} }
-        let heic2anyLoaded = false;
-        for (const url of libs.heic2any) { try { await loadScript(url); if (typeof heic2any !== 'undefined') { heic2anyLoaded = true; loaded.push("heic2any"); break; } } catch (e) {} }
-
-        if (heicToLoaded || heic2anyLoaded) {
-            statusEl.style.display = 'none'; 
-            btn.disabled = false; btn.innerText = "変換開始"; btn.classList.remove('btn-secondary'); btn.classList.add('btn-success');
-        } else {
-            statusEl.style.display = 'block';
-            statusEl.className = 'alert alert-danger py-2 text-center small';
-            statusEl.innerHTML = `<strong>❌ 読み込み失敗:</strong> セキュリティ制限により画像変換エンジンがすべてブロックされました。`;
-        }
-    }
+    // 既存のHEIC/PDF/動画変換のJSコード（テロップ部分は削除済み）
+    const libs={heicTo:["https://cdn.jsdelivr.net/npm/heic-to@1.3.0/dist/iife/heic-to.js","https://unpkg.com/heic-to@1.3.0/dist/iife/heic-to.js"],heic2any:["https://cdnjs.cloudflare.com/ajax/libs/heic2any/0.0.4/heic2any.min.js","https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"]};
+    function loadScript(e){return new Promise((t,n)=>{const o=document.createElement("script");o.src=e,o.onload=()=>t(!0),o.onerror=()=>n(!1),document.head.appendChild(o)})}
+    async function initEngines(){const e=document.getElementById("engine-status"),t=document.getElementById("photo-convert-btn");let n=!1;for(const o of libs.heicTo)try{await loadScript(o);if(typeof HeicTo!="undefined"||typeof window.heicTo!="undefined"){n=!0;break}}catch(e){}let o=!1;for(const t of libs.heic2any)try{await loadScript(t);if(typeof heic2any!="undefined"){o=!0;break}}catch(e){}n||o?(e.style.display="none",t.disabled=!1,t.innerText="変換開始",t.classList.remove("btn-secondary"),t.classList.add("btn-success")):(e.style.display="block",e.innerHTML="<strong>❌ 読み込み失敗:</strong> エンジンがブロックされました。")}
     initEngines();
-</script>
 
-<script>
-    let objectUrls = [];
-    const { createFFmpeg, fetchFile } = FFmpeg;
-    let ffmpeg = null;
+    let objectUrls=[],ffmpeg=null;const{createFFmpeg,fetchFile}=FFmpeg;
+    function cleanUpObjectUrls(){objectUrls.forEach(e=>URL.revokeObjectURL(e)),objectUrls=[]}
+    function addResultRow(e,t,n,o,r,c=[]){const s=document.getElementById(e);(s.querySelector(".text-muted")||""===s.innerHTML)&&(s.innerHTML="");let d="";c.forEach(e=>{d+=`<span class="${"danger"===e.type?"tag-danger":"safe"===e.type?"tag-safe":"tag-warning"}">${e.text}</span>`});const a=document.createElement("div");a.className="result-item",a.id=r,a.innerHTML=`<div class="d-flex align-items-center overflow-hidden"><div class="text-truncate fw-bold" style="max-width: 300px;">${t}</div>${d}</div><div class="d-flex align-items-center"><span class="status-badge ${o} me-3" id="${r}-status">${n}</span></div>`,s.appendChild(a)}
+    function updateResultRow(e,t,n){const o=document.getElementById(`${e}-status`);o&&(o.className=`status-badge ${n} me-3`,o.innerText=t)}
+    function selectMode(e){document.getElementById("mode-"+e).checked=!0,document.querySelectorAll(".mode-card").forEach(e=>e.classList.remove("selected")),document.getElementById("mode-"+e).closest(".mode-card").classList.add("selected"),document.querySelectorAll(".description-box").forEach(e=>e.style.display="none"),document.getElementById("desc-"+e).style.display="block"}
+    function updateDownloadButtons(e,t,n){const o=document.getElementById(t),r=document.getElementById(n);1===e?(o.style.display="inline-block",r.disabled=!0,r.classList.add("btn-secondary"),r.classList.remove("btn-success")):(o.style.display="none",r.disabled=!1,r.classList.remove("btn-secondary"),r.classList.add("btn-success"))}
+    const ensureFFmpegLoaded=async()=>{null===ffmpeg?(ffmpeg=createFFmpeg({log:!0}),await ffmpeg.load()):ffmpeg.isLoaded()||await ffmpeg.load()};
 
-    function cleanUpObjectUrls() { objectUrls.forEach(url => URL.revokeObjectURL(url)); objectUrls = []; }
+    // 動画
+    async function scanFiles(e){const t=document.getElementById("video-result-list");t.innerHTML="";const n=Array.from(e.files);for(let e=0;e<n.length;e++){const o=n[e],r=[],c=o.name.toUpperCase().split(".").pop(),s=["DAV","H264","264","DAT","VOB"].includes(c);let d=s;if(!d)try{const e=await checkContainerSignature(o);e&&(d=!0)}catch(e){}d&&r.push({text:"⚠️ MP4再変換モード推奨",type:"warning"}),"MP4"!==c&&"MOV"!==c||checkHevcBinary(o).then(e=>{e&&r.push({text:"⚠️ MP4再変換モード必須",type:"danger"})}),addResultRow("video-result-list",o.name,"待機中","status-waiting",`v-row-${e}`,r)}}
+    async function checkContainerSignature(e){return new Promise(t=>{const n=new FileReader;n.onload=e=>{const n=Array.from(new Uint8Array(e.target.result)).map(e=>e.toString(16).padStart(2,"0").toUpperCase()).join("");t(n.startsWith("52494646")&&n.includes("41564920")?"AVI":n.startsWith("1A45DFA3")?"MKV":n.startsWith("464C56")?"FLV":n.startsWith("47")?"TS":!!n.startsWith("000001BA")&&"MPG")},n.onerror=()=>t(null),n.readAsArrayBuffer(e.slice(0,32))})}
+    async function checkHevcBinary(e){const t=2097152,n=(n,o)=>new Promise(t=>{const r=new FileReader;r.onload=e=>{const n=new Uint8Array(e.target.result),o=[[104,118,99,49],[104,101,118,49],[100,118,104,101],[100,118,104,49]];for(let e=0;e<n.length-4;e++)for(let r of o)if(n[e]===r[0]&&n[e+1]===r[1]&&n[e+2]===r[2]&&n[e+3]===r[3])return void t(!0);t(!1)},r.onerror=()=>t(!1);const c=e.slice(n,o);r.readAsArrayBuffer(c)});let o=await n(0,t);return o||e.size>t&&(o=await n(e.size-t,e.size)),o}
     
-    function addResultRow(containerId, fileName, statusText, statusClass, rowId, tags = []) {
-        const container = document.getElementById(containerId);
-        if(container.querySelector('.text-muted') || container.innerHTML === '') container.innerHTML = ''; 
-        let tagHtml = '';
-        tags.forEach(tag => {
-            const colorClass = tag.type === 'danger' ? 'tag-danger' : (tag.type === 'safe' ? 'tag-safe' : 'tag-warning');
-            tagHtml += `<span class="${colorClass}">${tag.text}</span>`;
-        });
-        const div = document.createElement('div');
-        div.className = 'result-item'; div.id = rowId;
-        div.innerHTML = `<div class="d-flex align-items-center overflow-hidden"><div class="text-truncate fw-bold" style="max-width: 300px;">${fileName}</div>${tagHtml}</div><div class="d-flex align-items-center"><span class="status-badge ${statusClass} me-3" id="${rowId}-status">${statusText}</span></div>`;
-        container.appendChild(div);
-    }
-    function updateResultRow(rowId, statusText, statusClass) {
-        const badge = document.getElementById(`${rowId}-status`);
-        if(badge) { badge.className = `status-badge ${statusClass} me-3`; badge.innerText = statusText; }
-    }
-    function selectMode(mode) {
-        document.getElementById('mode-' + mode).checked = true;
-        document.querySelectorAll('.mode-card').forEach(el => el.classList.remove('selected'));
-        document.getElementById('mode-' + mode).closest('.mode-card').classList.add('selected');
-        document.querySelectorAll('.description-box').forEach(el => el.style.display = 'none');
-        document.getElementById('desc-' + mode).style.display = 'block';
-    }
-    function updateDownloadButtons(count, singleBtnId, zipBtnId) {
-        const singleBtn = document.getElementById(singleBtnId);
-        const zipBtn = document.getElementById(zipBtnId);
-        if (count === 1) {
-            singleBtn.style.display = 'inline-block'; zipBtn.disabled = true; zipBtn.classList.add('btn-secondary'); zipBtn.classList.remove('btn-success');
-        } else {
-            singleBtn.style.display = 'none'; zipBtn.disabled = false; zipBtn.classList.remove('btn-secondary'); zipBtn.classList.add('btn-success');
-        }
-    }
+    let convertedVideos=[];
+    document.getElementById("video-convert-btn").addEventListener("click",async()=>{const e=document.getElementById("video-uploader"),t=document.querySelector('input[name="videoMode"]:checked'),n=document.getElementById("video-convert-btn"),o=document.getElementById("btn-text"),r=document.getElementById("video-save-area");if(0===e.files.length)return void alert("ファイルを選択してください");if(!t)return void alert("モードを選択してください");try{n.disabled=!0,await ensureFFmpegLoaded(),o.innerText="変換中...",r.style.display="none",cleanUpObjectUrls(),convertedVideos=[];const c=Array.from(e.files);for(let e=0;e<c.length;e++){const s=c[e],d=`v-row-${e}`,a=`in_${e}`,l=`out_${e}.mp4`;updateResultRow(d,"準備中...","status-processing");try{ffmpeg.FS("writeFile",a,await fetchFile(s));let e="rewrap"===t.value?["-fflags","+genpts","-i",a,"-c","copy","-map","0","-ignore_unknown",l]:["-i",a,"-map","0:v:0?","-map","0:a:0?","-vf","scale=trunc(iw/2)*2:trunc(ih/2)*2","-r","30000/1001","-pix_fmt","yuv420p","-c:v","libx264","-preset","superfast","-c:a","aac","-ar","48000",l];await ffmpeg.run(...e);const i=ffmpeg.FS("readFile",l),u=new Blob([i.buffer],{type:"video/mp4"});convertedVideos.push({name:`converted_${s.name.replace(/\.[^/.]+$/,"")}.mp4`,blob:u}),updateResultRow(d,"完了","status-success");try{ffmpeg.FS("unlink",a),ffmpeg.FS("unlink",l)}catch(e){}}catch(e){console.error(e),updateResultRow(d,"エラー","status-error")}}o.innerText="変換開始",n.disabled=!1,updateDownloadButtons(convertedVideos.length,"video-single-btn","video-zip-btn"),convertedVideos.length>0&&(r.style.display="block")}catch(e){console.error(e),alert("エラー"),n.disabled=!1}});
+    document.getElementById("video-single-btn").onclick=function(){if(convertedVideos.length>0){const e=convertedVideos[0],t=URL.createObjectURL(e.blob);objectUrls.push(t),saveAs(e.blob,e.name)}};
+    document.getElementById("video-zip-btn").onclick=function(){const e=new JSZip;convertedVideos.forEach(t=>e.file(t.name,t.blob)),e.generateAsync({type:"blob"}).then(e=>saveAs(e,"video_converted.zip"))};
 
-    const ensureFFmpegLoaded = async () => {
-        if (ffmpeg === null) {
-            ffmpeg = createFFmpeg({ log: true });
-            await ffmpeg.load();
-        } else if (!ffmpeg.isLoaded()) {
-            await ffmpeg.load();
-        }
-    };
-
-    // --- 動画用 事前診断 ---
-    async function scanFiles(inputElement) {
-        const list = document.getElementById('video-result-list'); list.innerHTML = '';
-        const files = Array.from(inputElement.files);
-        for (let i = 0; i < files.length; i++) {
-            const file = files[i]; const tags = []; const name = file.name.toUpperCase(); const ext = name.split('.').pop();
-            const dvrExts = ['DAV', 'H264', '264', 'DAT', 'VOB']; let isLegacy = dvrExts.includes(ext);
-            if (!isLegacy) { try { const format = await checkContainerSignature(file); if (format) isLegacy = true; } catch(e) {} }
-            if (isLegacy) tags.push({ text: '⚠️ MP4再変換モード推奨', type: 'warning' });
-            if (ext === 'MP4' || ext === 'MOV') { try { const isHevc = await checkHevcBinary(file); if (isHevc) tags.push({ text: '⚠️ MP4再変換モード必須', type: 'danger' }); } catch(e) {} }
-            addResultRow('video-result-list', file.name, '待機中', 'status-waiting', `v-row-${i}`, tags);
-        }
-    }
-    async function checkContainerSignature(file) {
-        return new Promise((resolve) => {
-            const reader = new FileReader(); reader.onload = (e) => {
-                const arr = new Uint8Array(e.target.result); const hex = Array.from(arr).map(b => b.toString(16).padStart(2,'0').toUpperCase()).join('');
-                if (hex.startsWith('52494646') && hex.includes('41564920')) resolve('AVI'); else if (hex.startsWith('1A45DFA3')) resolve('MKV'); else if (hex.startsWith('464C56')) resolve('FLV'); else if (hex.startsWith('47')) resolve('TS'); else if (hex.startsWith('000001BA')) resolve('MPG'); else resolve(null);
-            }; reader.onerror = () => resolve(null); reader.readAsArrayBuffer(file.slice(0, 32));
-        });
-    }
-    async function checkHevcBinary(file) {
-        const CHUNK_SIZE = 2 * 1024 * 1024;
-        const scanChunk = (start, end) => {
-            return new Promise((resolve) => {
-                const reader = new FileReader(); reader.onload = (e) => {
-                    const arr = new Uint8Array(e.target.result); const signatures = [[0x68, 0x76, 0x63, 0x31], [0x68, 0x65, 0x76, 0x31], [0x64, 0x76, 0x68, 0x65], [0x64, 0x76, 0x68, 0x31]];
-                    for (let i = 0; i < arr.length - 4; i++) { for (let sig of signatures) { if (arr[i] === sig[0] && arr[i+1] === sig[1] && arr[i+2] === sig[2] && arr[i+3] === sig[3]) { resolve(true); return; } } } resolve(false);
-                }; reader.onerror = () => resolve(false); const slice = file.slice(start, end); reader.readAsArrayBuffer(slice);
-            });
-        };
-        let found = await scanChunk(0, CHUNK_SIZE); if (found) return true; if (file.size > CHUNK_SIZE) found = await scanChunk(file.size - CHUNK_SIZE, file.size); return found;
-    }
-
-    // --- 動画変換 ---
-    document.getElementById('video-convert-btn').addEventListener('click', async () => {
-        const fileInput = document.getElementById('video-uploader'); const mode = document.querySelector('input[name="videoMode"]:checked');
-        const btn = document.getElementById('video-convert-btn'); const btnText = document.getElementById('btn-text'); const saveArea = document.getElementById('video-save-area');
-        if (fileInput.files.length === 0) { alert('ファイルを選択してください'); return; } if (!mode) { alert('モードを選択してください'); return; }
-        try {
-            btn.disabled = true; await ensureFFmpegLoaded(); btnText.innerText = '変換中...'; saveArea.style.display = 'none'; cleanUpObjectUrls(); convertedVideos = [];
-            const files = Array.from(fileInput.files);
-            for (let i = 0; i < files.length; i++) {
-                const file = files[i]; const rowId = `v-row-${i}`; const inputName = `in_${i}`; const outputName = `out_${i}.mp4`;
-                window.currentProcessingRowId = rowId; updateResultRow(rowId, '準備中...', 'status-processing');
-                try {
-                    ffmpeg.FS('writeFile', inputName, await fetchFile(file));
-                    let command = (mode.value === 'rewrap') ? ['-fflags', '+genpts', '-i', inputName, '-c', 'copy', '-map', '0', '-ignore_unknown', outputName] : ['-i', inputName, '-map', '0:v:0?', '-map', '0:a:0?', '-vf', 'scale=trunc(iw/2)*2:trunc(ih/2)*2', '-r', '30000/1001', '-pix_fmt', 'yuv420p', '-c:v', 'libx264', '-preset', 'superfast', '-c:a', 'aac', '-ar', '48000', outputName];
-                    await ffmpeg.run(...command);
-                    const data = ffmpeg.FS('readFile', outputName); const blob = new Blob([data.buffer], { type: 'video/mp4' });
-                    convertedVideos.push({ name: `converted_${file.name.replace(/\.[^/.]+$/, "")}.mp4`, blob: blob });
-                    updateResultRow(rowId, '完了', 'status-success');
-                    try { ffmpeg.FS('unlink', inputName); ffmpeg.FS('unlink', outputName); } catch(e){}
-                } catch (err) { console.error(err); updateResultRow(rowId, 'エラー', 'status-error'); }
-            }
-            btnText.innerText = '変換開始'; btn.disabled = false; updateDownloadButtons(convertedVideos.length, 'video-single-btn', 'video-zip-btn'); if(convertedVideos.length > 0) saveArea.style.display = 'block';
-        } catch (e) { console.error(e); alert("エラー"); btn.disabled = false; }
-    });
-    document.getElementById('video-single-btn').onclick = function() { if (convertedVideos.length > 0) { const f = convertedVideos[0]; const url = URL.createObjectURL(f.blob); objectUrls.push(url); saveAs(f.blob, f.name); } };
-    document.getElementById('video-zip-btn').onclick = function() { const zip = new JSZip(); convertedVideos.forEach(f => zip.file(f.name, f.blob)); zip.generateAsync({type:"blob"}).then(c => saveAs(c, "video_converted.zip")); };
-
-    // --- 写真変換 ---
-    let convertedPhotos = [];
-    document.getElementById('photo-convert-btn').addEventListener('click', async () => {
-        const fileInput = document.getElementById('photo-uploader'); const btn = document.getElementById('photo-convert-btn'); const saveArea = document.getElementById('photo-save-area');
-        const hasHeicTo = (typeof HeicTo !== 'undefined' || typeof window.heicTo !== 'undefined'); const hasHeic2any = (typeof heic2any !== 'undefined');
-        if (!hasHeicTo && !hasHeic2any) { alert("エンジン未ロード"); return; }
-        if (fileInput.files.length === 0) { alert('選択してください'); return; }
-        btn.disabled = true; saveArea.style.display = 'none'; document.getElementById('photo-result-list').innerHTML = ''; convertedPhotos = [];
-        const files = Array.from(fileInput.files);
-        files.forEach((file, i) => addResultRow('photo-result-list', file.name, '待機中', 'status-waiting', `p-row-${i}`));
-        for (let i = 0; i < files.length; i++) {
-            const rowId = `p-row-${i}`; const file = files[i]; let success = false;
-            if (hasHeicTo) {
-                try { updateResultRow(rowId, '変換中...', 'status-processing'); const h = window.HeicTo || window.heicTo; const b = await h({ blob: file, type: "image/jpeg", quality: 0.9 }); convertedPhotos.push({ name: file.name.replace(/\.[^/.]+$/, "") + ".jpg", blob: b }); updateResultRow(rowId, '完了', 'status-success'); success = true; } catch (e) {}
-            }
-            if (!success && hasHeic2any) {
-                try { const r = await heic2any({ blob: file, toType: "image/jpeg", quality: 0.9 }); const b = Array.isArray(r) ? r[0] : r; convertedPhotos.push({ name: file.name.replace(/\.[^/.]+$/, "") + ".jpg", blob: b }); updateResultRow(rowId, '完了', 'status-success'); success = true; } catch (e) {}
-            }
-            if (!success) updateResultRow(rowId, '変換失敗', 'status-error');
-        }
-        btn.disabled = false; updateDownloadButtons(convertedPhotos.length, 'photo-single-btn', 'photo-zip-btn'); if (convertedPhotos.length > 0) saveArea.style.display = 'block';
-    });
-    document.getElementById('photo-single-btn').onclick = function() { if (convertedPhotos.length > 0) saveAs(convertedPhotos[0].blob, convertedPhotos[0].name); };
-    document.getElementById('photo-zip-btn').onclick = function() { const zip = new JSZip(); convertedPhotos.forEach(f => zip.file(f.name, f.blob)); zip.generateAsync({type:"blob"}).then(c => saveAs(c, "photo_converted.zip")); };
-
-    // --- PDF変換 ---
-    let convertedPdfs = [];
-    document.getElementById('pdf-convert-btn').addEventListener('click', async () => {
-        const fileInput = document.getElementById('pdf-uploader'); const format = document.querySelector('input[name="pdfFormat"]:checked').value; const btn = document.getElementById('pdf-convert-btn'); const saveArea = document.getElementById('pdf-save-area');
-        if (fileInput.files.length === 0) { alert('PDFを選択してください'); return; }
-        btn.disabled = true; saveArea.style.display = 'none'; document.getElementById('pdf-result-list').innerHTML = ''; convertedPdfs = [];
-        const files = Array.from(fileInput.files);
-        for (let i = 0; i < files.length; i++) {
-            const file = files[i];
-            try {
-                const arrayBuffer = await file.arrayBuffer(); const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
-                for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-                    const rowId = `pdf-${i}-page-${pageNum}`; addResultRow('pdf-result-list', `${file.name} (P.${pageNum})`, '変換中', 'status-processing', rowId);
-                    const page = await pdf.getPage(pageNum); const viewport = page.getViewport({ scale: 2.0 });
-                    const canvas = document.createElement('canvas'); const context = canvas.getContext('2d'); canvas.height = viewport.height; canvas.width = viewport.width;
-                    await page.render({ canvasContext: context, viewport: viewport }).promise;
-                    await new Promise(r => canvas.toBlob(b => { convertedPdfs.push({ name: file.name.replace(/\.pdf$/i, "") + `_page${String(pageNum).padStart(2, '0')}.${format === 'png'?'png':'jpg'}`, blob: b }); updateResultRow(rowId, '完了', 'status-success'); r(); }, format==='png'?'image/png':'image/jpeg', 0.9));
-                }
-            } catch (e) { console.error(e); }
-        }
-        btn.disabled = false; updateDownloadButtons(convertedPdfs.length, 'pdf-single-btn', 'pdf-zip-btn'); saveArea.style.display = 'block';
-    });
-    document.getElementById('pdf-single-btn').onclick = function() { if (convertedPdfs.length > 0) saveAs(convertedPdfs[0].blob, convertedPdfs[0].name); };
-    document.getElementById('pdf-zip-btn').onclick = function() { const zip = new JSZip(); convertedPdfs.forEach(f => zip.file(f.name, f.blob)); zip.generateAsync({type:"blob"}).then(c => saveAs(c, "pdf_converted.zip")); };
-
-    // --- テロップ結合 (v11.7) ---
-    document.getElementById('telop-convert-btn').addEventListener('click', async () => {
-        const fileInput = document.getElementById('telop-uploader');
-        const resultArea = document.getElementById('telop-result-area');
-        const btn = document.getElementById('telop-convert-btn');
-        const progressBar = document.getElementById('telop-progress-bar').firstElementChild;
-        document.getElementById('telop-progress-bar').style.display = 'flex';
-
-        if (fileInput.files.length === 0) { alert("画像を選択してください"); return; }
-        
-        btn.disabled = true; btn.innerText = "生成中..."; 
-        resultArea.innerHTML = '<div class="spinner-border text-warning" role="status"></div><div class="mt-2">画像を加工中...</div>';
-        progressBar.style.width = '0%'; progressBar.innerText = '0%';
-        
-        try {
-            await ensureFFmpegLoaded();
-            const files = Array.from(fileInput.files).sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
-            for (let i = 0; i < files.length; i++) {
-                const p = Math.round((i / files.length) * 50);
-                progressBar.style.width = `${p}%`; progressBar.innerText = `加工中 ${p}%`;
-                const imgBitmap = await createImageBitmap(files[i]);
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-                canvas.width = imgBitmap.width; canvas.height = imgBitmap.height;
-                
-                // グレー背景処理
-                ctx.fillStyle = '#888888'; 
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                
-                ctx.drawImage(imgBitmap, 0, 0);
-                
-                const fontSize = Math.max(24, Math.floor(canvas.height * 0.05));
-                ctx.font = `bold ${fontSize}px Arial, sans-serif`; ctx.textBaseline = 'top';
-                const headerHeight = Math.floor(fontSize * 1.5);
-                ctx.fillStyle = 'rgba(0, 0, 0, 0.7)'; ctx.fillRect(0, 0, canvas.width, headerHeight);
-                ctx.fillStyle = '#ffffff'; ctx.fillText(`File: ${files[i].name}`, 10, (headerHeight - fontSize) / 2);
-                
-                const blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.95));
-                ffmpeg.FS('writeFile', `img${String(i).padStart(3, '0')}.jpg`, await fetchFile(blob));
-            }
-            progressBar.style.width = '75%'; progressBar.innerText = 'エンコード中...';
-            await ffmpeg.run('-framerate', '1', '-i', 'img%03d.jpg', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-crf', '28', 'output_check.mp4');
-            progressBar.style.width = '100%'; progressBar.innerText = '完了';
-            const data = ffmpeg.FS('readFile', 'output_check.mp4'); const blob = new Blob([data.buffer], { type: 'video/mp4' }); const url = URL.createObjectURL(blob);
-            
-            // UI with Gem Link & Model Advice & Disclaimer
-            resultArea.innerHTML = `
-                <div class="alert alert-success fw-bold">✨ チェック用動画完成 (1秒/枚)</div>
-                <video src="${url}" controls class="w-100 mb-3" style="max-height: 300px; background:#000;"></video>
-                <div class="mb-4">
-                    <a href="${url}" download="telop_check_ai.mp4" class="btn btn-success fw-bold px-5">⬇ 保存</a>
-                </div>
-                <div class="card border-info text-start">
-                    <div class="card-header bg-info text-white fw-bold">🚀 次のステップ: AIで校正チェック</div>
-                    <div class="card-body bg-light">
-                        <p class="small text-muted mb-2">保存した動画をGeminiにアップロードして、誤字脱字や固有名詞のチェックを行いましょう。</p>
-                        <a href="https://gemini.google.com/gem/1dN_UBLXFguu4dfD4ZUWab1FV2mc5Jupv?usp=sharing" target="_blank" class="btn btn-outline-primary w-100 fw-bold mb-3">🤖 校閲Geminiを開く</a>
-                        
-                        <div class="small text-muted border-top pt-2">
-                            <strong>使い方:</strong><br>
-                            1. 上のボタンからGeminiを開く<br>
-                            2. 動画を添付し、放送日(例: 20240101)を入力して送信<br>
-                            <br>
-                            <strong>💡 推奨設定:</strong><br>
-                            基本は <span class="badge bg-secondary text-dark border">Pro</span> モードでOKです。<br>
-                            より厳密な判断が必要な場合は <span class="badge bg-secondary text-dark border">思考モード</span> をお使いください。
-                        </div>
-
-                        <div class="alert alert-warning mt-3 mb-0 py-2 small" role="alert">
-                            <strong>⚠️ AIチェックの限界について</strong><br>
-                            AIによる画像認識（OCR）は、画質やフォントにより誤読する場合があります。また、最新の人事情報などが反映されていない可能性もあります。<br>
-                            あくまで補助ツールとして利用し、<strong>最終的な校了判断は必ず目視で行ってください。</strong>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            for (let i = 0; i < files.length; i++) { try { ffmpeg.FS('unlink', `img${String(i).padStart(3, '0')}.jpg`); } catch(e){} }
-            try { ffmpeg.FS('unlink', 'output_check.mp4'); } catch(e){}
-        } catch(e) { console.error(e); resultArea.innerHTML = `<div class="alert alert-danger">エラーが発生しました: ${e.message}</div>`; }
-        btn.disabled = false; btn.innerText = "動画を作成 (MP4)";
-    });
+    // 写真/PDF (圧縮版コード)
+    let convertedPhotos=[];document.getElementById("photo-convert-btn").addEventListener("click",async()=>{const e=document.getElementById("photo-uploader"),t=document.getElementById("photo-convert-btn"),n=document.getElementById("photo-save-area"),o="undefined"!=typeof HeicTo||"undefined"!=typeof window.heicTo,r="undefined"!=typeof heic2any;if(!o&&!r)return void alert("エンジン未ロード");if(0===e.files.length)return void alert("選択してください");t.disabled=!0,n.style.display="none",document.getElementById("photo-result-list").innerHTML="",convertedPhotos=[];const c=Array.from(e.files);c.forEach((e,t)=>addResultRow("photo-result-list",e.name,"待機中","status-waiting",`p-row-${t}`));for(let e=0;e<c.length;e++){const n=`p-row-${e}`,s=c[e];let d=!1;if(o)try{updateResultRow(n,"変換中...","status-processing");const e=window.HeicTo||window.heicTo,t=await e({blob:s,type:"image/jpeg",quality:.9});convertedPhotos.push({name:s.name.replace(/\.[^/.]+$/,"")+".jpg",blob:t}),updateResultRow(n,"完了","status-success"),d=!0}catch(e){}if(!d&&r)try{const e=await heic2any({blob:s,toType:"image/jpeg",quality:.9}),t=Array.isArray(e)?e[0]:e;convertedPhotos.push({name:s.name.replace(/\.[^/.]+$/,"")+".jpg",blob:t}),updateResultRow(n,"完了","status-success"),d=!0}catch(e){}d||updateResultRow(n,"変換失敗","status-error")}t.disabled=!1,updateDownloadButtons(convertedPhotos.length,"photo-single-btn","photo-zip-btn"),convertedPhotos.length>0&&(n.style.display="block")});document.getElementById("photo-single-btn").onclick=function(){convertedPhotos.length>0&&saveAs(convertedPhotos[0].blob,convertedPhotos[0].name)},document.getElementById("photo-zip-btn").onclick=function(){const e=new JSZip;convertedPhotos.forEach(t=>e.file(t.name,t.blob)),e.generateAsync({type:"blob"}).then(e=>saveAs(e,"photo_converted.zip"))};let convertedPdfs=[];document.getElementById("pdf-convert-btn").addEventListener("click",async()=>{const e=document.getElementById("pdf-uploader"),t=document.querySelector('input[name="pdfFormat"]:checked').value,n=document.getElementById("pdf-convert-btn"),o=document.getElementById("pdf-save-area");if(0===e.files.length)return void alert("PDFを選択してください");n.disabled=!0,o.style.display="none",document.getElementById("pdf-result-list").innerHTML="",convertedPdfs=[];const r=Array.from(e.files);for(let e=0;e<r.length;e++){const n=r[e];try{const o=await n.arrayBuffer(),r=await pdfjsLib.getDocument(o).promise;for(let e=1;e<=r.numPages;e++){const o=`pdf-${n.name}-p${e}`;addResultRow("pdf-result-list",`${n.name} (P.${e})`,"変換中","status-processing",o);const c=await r.getPage(e),s=c.getViewport({scale:2}),d=document.createElement("canvas"),a=d.getContext("2d");d.height=s.height,d.width=s.width,await c.render({canvasContext:a,viewport:s}).promise,await new Promise(r=>d.toBlob(c=>{convertedPdfs.push({name:n.name.replace(/\.pdf$/i,"")+`_page${String(e).padStart(2,"0")}.${"png"===t?"png":"jpg"}`,blob:c}),updateResultRow(o,"完了","status-success"),r()},"png"===t?"image/png":"image/jpeg",.9))}}catch(e){console.error(e)}}n.disabled=!1,updateDownloadButtons(convertedPdfs.length,"pdf-single-btn","pdf-zip-btn"),o.style.display="block"});document.getElementById("pdf-single-btn").onclick=function(){convertedPdfs.length>0&&saveAs(convertedPdfs[0].blob,convertedPdfs[0].name)},document.getElementById("pdf-zip-btn").onclick=function(){const e=new JSZip;convertedPdfs.forEach(t=>e.file(t.name,t.blob)),e.generateAsync({type:"blob"}).then(e=>saveAs(e,"pdf_converted.zip"))};
 </script>
 </body>
 </html>
