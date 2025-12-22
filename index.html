@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>マルチメディア一括変換ツール v9.2 (Final Complete)</title>
+    <title>メディア変換ツール v9.3</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
     
     <style>
@@ -41,7 +41,7 @@
 <body>
 
 <div class="main-container">
-    <h3 class="mb-4 text-center fw-bold text-dark">マルチメディア一括変換ツール v9.2</h3>
+    <h3 class="mb-4 text-center fw-bold text-dark">メディア変換ツール v9.3</h3>
     
     <div id="engine-status" class="alert alert-danger py-2 text-center small"></div>
     
@@ -60,7 +60,6 @@
     <div class="tab-content" id="myTabContent">
         
         <div class="tab-pane fade show active" id="photo-pane">
-            <div class="alert alert-info py-2"><small><strong>🔒 セキュリティ:</strong> ファイルは外部サーバーへ送信されず、ブラウザ内で安全に処理されます。</small></div>
             <div class="mb-3"><input type="file" class="form-control" id="photo-uploader" accept=".heic,.HEIC" multiple></div>
             <button id="photo-convert-btn" class="btn btn-secondary w-100 py-2 fw-bold" disabled>エンジン準備中...</button>
             <div class="card mt-4">
@@ -68,7 +67,7 @@
                 <div id="photo-result-list" class="card-body p-0"></div>
                 <div id="photo-save-area" class="save-area">
                     <div class="d-flex justify-content-center gap-3">
-                        <button id="photo-single-btn" class="btn btn-success fw-bold px-4" style="display:none;">⬇ そのまま保存</button>
+                        <button id="photo-single-btn" class="btn btn-success fw-bold px-4" style="display:none;">⬇ 保存</button>
                         <button id="photo-zip-btn" class="btn btn-secondary fw-bold px-4" disabled>📦 ZIPで保存</button>
                     </div>
                 </div>
@@ -76,7 +75,6 @@
         </div>
 
         <div class="tab-pane fade" id="pdf-pane">
-            <div class="alert alert-warning py-2"><small><strong>🔒 セキュリティ:</strong> データは外部へ送信されません。Scale 2.0で高画質出力されます。</small></div>
             <div class="pdf-settings p-3 bg-light rounded border mb-3">
                 <label class="form-label fw-bold mb-2">出力形式:</label>
                 <div class="d-flex gap-4">
@@ -91,7 +89,7 @@
                 <div id="pdf-result-list" class="card-body p-0"></div>
                 <div id="pdf-save-area" class="save-area">
                     <div class="d-flex justify-content-center gap-3">
-                        <button id="pdf-single-btn" class="btn btn-success fw-bold px-4" style="display:none;">⬇ そのまま保存</button>
+                        <button id="pdf-single-btn" class="btn btn-success fw-bold px-4" style="display:none;">⬇ 保存</button>
                         <button id="pdf-zip-btn" class="btn btn-secondary fw-bold px-4" disabled>📦 ZIPで保存</button>
                     </div>
                 </div>
@@ -120,7 +118,7 @@
                 </div>
                 <div id="video-save-area" class="save-area">
                     <div class="d-flex justify-content-center gap-3">
-                        <button id="video-single-btn" class="btn btn-success fw-bold px-4" style="display:none;">⬇ そのまま保存</button>
+                        <button id="video-single-btn" class="btn btn-success fw-bold px-4" style="display:none;">⬇ 保存</button>
                         <button id="video-zip-btn" class="btn btn-secondary fw-bold px-4" disabled>📦 ZIPで保存</button>
                     </div>
                 </div>
