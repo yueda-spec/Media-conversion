@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>マルチメディア一括変換ツール v8.2 (Dual Engine)</title>
+    <title>マルチメディア一括変換ツール v8.2 (Fixed)</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     
     <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
     
-    <script src="https://unpkg.com/heic2any@0.0.4/dist/heic2any.min.js"></script>
+    <script src="https://unpkg.com/heic2any@1.0.4/dist/heic2any.min.js"></script>
     
     <script src="https://unpkg.com/heic-to@1.3.0/dist/iife/heic-to.min.js"></script>
     
@@ -443,7 +443,7 @@
         zip.generateAsync({type:"blob"}).then(c => saveAs(c, "video_converted.zip"));
     };
 
-    // --- 2. 写真変換 (Dual Engine: heic2any -> heic-to) ---
+    // --- 2. 写真変換 (修正済み: heic2any v1.0.4 用) ---
     document.getElementById('photo-convert-btn').addEventListener('click', async () => {
         const fileInput = document.getElementById('photo-uploader');
         const btn = document.getElementById('photo-convert-btn');
@@ -461,34 +461,26 @@
         for (let i = 0; i < files.length; i++) {
             const rowId = `p-row-${i}`;
             const file = files[i];
-            updateResultRow(rowId, '変換中(1)...', 'status-processing');
+            updateResultRow(rowId, '変換中...', 'status-processing');
             
             try {
-                // --- 1st Try: heic2any ---
-                const resultBlob = await heic2any({ blob: file, toType: "image/jpeg", quality: 0.9 });
+                // v1.0.4 では blob オプションを正しく渡すことで安定動作します
+                const resultBlob = await heic2any({ 
+                    blob: file, 
+                    toType: "image/jpeg", 
+                    quality: 0.9 
+                });
+                
+                // Live Photosなどで複数枚返ってくる可能性があるため配列チェック
                 const finalBlob = Array.isArray(resultBlob) ? resultBlob[0] : resultBlob;
                 const newName = file.name.replace(/\.[^/.]+$/, "") + ".jpg";
+                
                 convertedPhotos.push({ name: newName, blob: finalBlob });
                 updateResultRow(rowId, '完了', 'status-success');
                 
-            } catch (err1) {
-                console.warn("heic2any failed, trying heic-to...", err1);
-                updateResultRow(rowId, '救済中(2)...', 'status-retry');
-                
-                try {
-                    // --- 2nd Try: heic-to ---
-                    const convertFunc = window.heicTo || window.HeicTo;
-                    if (!convertFunc) throw new Error("サブエンジン未ロード");
-                    
-                    const blob = await convertFunc({ blob: file, type: "image/jpeg", quality: 0.9 });
-                    const newName = file.name.replace(/\.[^/.]+$/, "") + ".jpg";
-                    convertedPhotos.push({ name: newName, blob: blob });
-                    updateResultRow(rowId, '完了(救済)', 'status-success');
-                    
-                } catch (err2) {
-                    console.error("All engines failed", err2);
-                    updateResultRow(rowId, '変換失敗', 'status-error');
-                }
+            } catch (err) {
+                console.error("Conversion failed:", err);
+                updateResultRow(rowId, '変換失敗', 'status-error');
             }
         }
         btn.disabled = false;
