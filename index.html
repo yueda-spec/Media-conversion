@@ -3,18 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>マルチメディア一括変換ツール v8.3 (Robust Edition)</title>
+    <title>マルチメディア一括変換ツール v8.4 (Stable)</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     
     <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
     
-    <script src="https://unpkg.com/heic2any@1.0.4/dist/heic2any.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/heic2any@1.0.4/dist/heic2any.min.js"></script>
     
-    <script src="https://unpkg.com/heic-to@1.3.0/dist/iife/heic-to.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/heic-to@1.3.0/dist/iife/heic-to.min.js"></script>
     
     <script type="module">
-        import * as pdfjsLib from 'https://unpkg.com/pdfjs-dist@4.3.136/build/pdf.min.mjs';
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://unpkg.com/pdfjs-dist@4.3.136/build/pdf.worker.min.mjs';
+        import * as pdfjsLib from 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.3.136/build/pdf.min.mjs';
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.3.136/build/pdf.worker.min.mjs';
         window.pdfjsLib = pdfjsLib;
     </script>
     
@@ -38,12 +38,11 @@
         .status-processing { background: #cfe2ff; color: #084298; }
         .status-success { background: #d1e7dd; color: #0f5132; }
         .status-error { background: #f8d7da; color: #842029; }
-        .status-retry { background: #fff3cd; color: #856404; } /* 再試行中 */
+        .status-retry { background: #fff3cd; color: #856404; }
         
         .tag-warning { font-size: 0.75rem; padding: 3px 8px; border-radius: 4px; background: #fff3cd; color: #856404; border: 1px solid #ffeeba; margin-left: 10px; font-weight: bold; }
         .tag-danger { font-size: 0.75rem; padding: 3px 8px; border-radius: 4px; background: #f8d7da; color: #842029; border: 1px solid #f5c6cb; margin-left: 10px; font-weight: bold; }
-        .tag-safe { font-size: 0.75rem; padding: 3px 8px; border-radius: 4px; background: #d1e7dd; color: #0f5132; border: 1px solid #badbcc; margin-left: 10px; font-weight: bold; }
-
+        
         .save-area { display: none; padding: 15px; background: #e0e7ff; border-top: 1px solid #c7d2fe; text-align: center; }
         .description-box { background-color: #fff3cd; border: 1px solid #ffecb5; padding: 15px; border-radius: 8px; margin-top: 15px; display: none; color: #664d03; }
         .footer-info { margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid #eee; font-size: 0.85rem; color: #6c757d; }
@@ -53,7 +52,7 @@
 <body>
 
 <div class="main-container">
-    <h3 class="mb-4 text-center fw-bold text-dark">マルチメディア一括変換ツール v8.3</h3>
+    <h3 class="mb-4 text-center fw-bold text-dark">マルチメディア一括変換ツール v8.4</h3>
     
     <ul class="nav nav-pills nav-fill mb-4" id="myTab" role="tablist">
         <li class="nav-item">
@@ -400,15 +399,15 @@
     document.getElementById('video-single-btn').onclick = function() { if (convertedVideos.length > 0) { const f = convertedVideos[0]; const url = URL.createObjectURL(f.blob); objectUrls.push(url); saveAs(f.blob, f.name); } };
     document.getElementById('video-zip-btn').onclick = function() { const zip = new JSZip(); convertedVideos.forEach(f => zip.file(f.name, f.blob)); zip.generateAsync({type:"blob"}).then(c => saveAs(c, "video_converted.zip")); };
 
-    // --- 2. 写真変換 (鉄壁のDual Engine実装) ---
+    // --- 2. 写真変換 (鉄壁のDual Engine実装 - CDN修正版) ---
     document.getElementById('photo-convert-btn').addEventListener('click', async () => {
         const fileInput = document.getElementById('photo-uploader');
         const btn = document.getElementById('photo-convert-btn');
         const saveArea = document.getElementById('photo-save-area');
 
-        // ライブラリロードチェック
+        // チェックを緩和：どちらか一方でもあれば実行する
         if (typeof heic2any === 'undefined' && typeof heicTo === 'undefined') {
-            alert("変換エンジンが読み込まれていません。インターネット接続を確認してください。");
+            alert("セキュリティ機能により変換エンジンがブロックされました。\n広告ブロック機能や社内ネットワーク制限を確認してください。");
             return;
         }
 
@@ -428,9 +427,8 @@
             
             try {
                 // --- Engine 1: heic2any (Primary) ---
-                updateResultRow(rowId, '変換中(v1)...', 'status-processing');
-                
                 if (typeof heic2any !== 'undefined') {
+                    updateResultRow(rowId, '変換中(v1)...', 'status-processing');
                     const resultBlob = await heic2any({ 
                         blob: file, 
                         toType: "image/jpeg", 
@@ -439,17 +437,17 @@
                     const finalBlob = Array.isArray(resultBlob) ? resultBlob[0] : resultBlob;
                     finishPhoto(file.name, finalBlob, rowId);
                 } else {
+                    // heic2anyがない場合、強制的にバックアップへ
                     throw new Error("Engine 1 Not Found");
                 }
 
             } catch (err1) {
-                console.warn("Primary engine failed, switching to backup...", err1);
+                console.warn("Primary engine failed/missing, switching to backup...", err1);
                 
                 // --- Engine 2: heic-to (Backup) ---
                 try {
-                    updateResultRow(rowId, '救済モード(v2)...', 'status-retry');
-                    
                     if (typeof heicTo !== 'undefined') {
+                        updateResultRow(rowId, '救済モード(v2)...', 'status-retry');
                         const blob = await heicTo({
                             blob: file,
                             type: "image/jpeg",
@@ -461,10 +459,8 @@
                     }
                 } catch (err2) {
                     console.error("All engines failed", err2);
-                    // エラー内容を画面に少し出す
                     let msg = '変換失敗';
                     if (err2.message && err2.message.includes('format')) msg = '形式エラー';
-                    else if (err2.message && err2.message.includes('memory')) msg = 'メモリ不足';
                     updateResultRow(rowId, msg, 'status-error');
                 }
             }
