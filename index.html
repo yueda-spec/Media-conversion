@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>メディア変換ツール v11.3</title>
+    <title>メディア変換ツール v11.4</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
     
     <style>
@@ -36,7 +36,7 @@
 <body>
 
 <div class="main-container">
-    <h3 class="mb-4 text-center fw-bold text-dark">メディア変換ツール v11.3</h3>
+    <h3 class="mb-4 text-center fw-bold text-dark">メディア変換ツール v11.4</h3>
     
     <div id="engine-status" class="alert alert-danger py-2 text-center small"></div>
     
@@ -124,7 +124,7 @@
         </div>
 
         <div class="tab-pane fade" id="telop-pane">
-            <div class="alert alert-primary py-2"><small><strong>🤖 AIチェックモード:</strong> 黒・白文字両対応のため、背景をグレーにして動画化します。</small></div>
+            <div class="alert alert-primary py-2"><small><strong>🤖 AIチェックモード:</strong> 各画像を1秒ずつ表示し、上部にファイル名を印字します。</small></div>
             
             <div class="mb-3">
                 <label class="form-label fw-bold">1. テロップ画像選択 (PNG/JPG)</label>
@@ -374,7 +374,7 @@
     document.getElementById('pdf-single-btn').onclick = function() { if (convertedPdfs.length > 0) saveAs(convertedPdfs[0].blob, convertedPdfs[0].name); };
     document.getElementById('pdf-zip-btn').onclick = function() { const zip = new JSZip(); convertedPdfs.forEach(f => zip.file(f.name, f.blob)); zip.generateAsync({type:"blob"}).then(c => saveAs(c, "pdf_converted.zip")); };
 
-    // --- テロップ結合 (v11.3: Guide Added) ---
+    // --- テロップ結合 (v11.4: 1.0sec Fixed + Gray BG) ---
     document.getElementById('telop-convert-btn').addEventListener('click', async () => {
         const fileInput = document.getElementById('telop-uploader');
         const resultArea = document.getElementById('telop-result-area');
@@ -415,13 +415,15 @@
                 ffmpeg.FS('writeFile', `img${String(i).padStart(3, '0')}.jpg`, await fetchFile(blob));
             }
             progressBar.style.width = '75%'; progressBar.innerText = 'エンコード中...';
-            await ffmpeg.run('-framerate', '2', '-i', 'img%03d.jpg', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-crf', '28', 'output_check.mp4');
+            
+            // ★Framerateを1に変更 (1秒/枚)★
+            await ffmpeg.run('-framerate', '1', '-i', 'img%03d.jpg', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-crf', '28', 'output_check.mp4');
+            
             progressBar.style.width = '100%'; progressBar.innerText = '完了';
             const data = ffmpeg.FS('readFile', 'output_check.mp4'); const blob = new Blob([data.buffer], { type: 'video/mp4' }); const url = URL.createObjectURL(blob);
             
-            // UI with Gem Link & Model Advice
             resultArea.innerHTML = `
-                <div class="alert alert-success fw-bold">✨ チェック用動画完成 (0.5秒/枚)</div>
+                <div class="alert alert-success fw-bold">✨ チェック用動画完成 (1秒/枚)</div>
                 <video src="${url}" controls class="w-100 mb-3" style="max-height: 300px; background:#000;"></video>
                 <div class="mb-4">
                     <a href="${url}" download="telop_check_ai.mp4" class="btn btn-success fw-bold px-5">⬇ 保存</a>
