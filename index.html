@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>メディア変換ツール v11.7</title>
+    <title>メディア変換ツール v11.8</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
     
     <style>
@@ -30,13 +30,17 @@
         .footer-info { margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid #eee; font-size: 0.85rem; color: #6c757d; }
         .footer-section-title { font-weight: bold; margin-bottom: 0.5rem; color: #343a40; display: flex; align-items: center; }
         
+        /* 関連リンク用のスタイル */
+        .related-links a { color: #6c757d; text-decoration: none; font-weight: bold; transition: color 0.2s; }
+        .related-links a:hover { color: #0d6efd; text-decoration: underline; }
+        
         #engine-status { display: none; }
     </style>
 </head>
 <body>
 
 <div class="main-container">
-    <h3 class="mb-4 text-center fw-bold text-dark">メディア変換ツール v11.7</h3>
+    <h3 class="mb-4 text-center fw-bold text-dark">メディア変換ツール v11.8</h3>
     
     <div id="engine-status" class="alert alert-danger py-2 text-center small"></div>
     
@@ -187,6 +191,18 @@
                 </ul>
             </div>
         </div>
+    </div>
+</div>
+
+<div class="text-center mt-4 mb-5 text-muted related-links">
+    <small class="fw-bold mb-2 d-block text-uppercase" style="letter-spacing: 1px;">Other Tools</small>
+    <div class="d-flex justify-content-center gap-4">
+        <a href="https://yueda-spec.github.io/V-checker/" target="_blank">
+            📺 V-checker
+        </a>
+        <a href="https://yueda-spec.github.io/ToolKit/" target="_blank">
+            🧮 計算ツールキット
+        </a>
     </div>
 </div>
 
@@ -396,7 +412,7 @@
     document.getElementById('pdf-single-btn').onclick = function() { if (convertedPdfs.length > 0) saveAs(convertedPdfs[0].blob, convertedPdfs[0].name); };
     document.getElementById('pdf-zip-btn').onclick = function() { const zip = new JSZip(); convertedPdfs.forEach(f => zip.file(f.name, f.blob)); zip.generateAsync({type:"blob"}).then(c => saveAs(c, "pdf_converted.zip")); };
 
-    // --- テロップ結合 (v11.6: 1.0sec + Gray BG + Disclaimer + New Tab Name & Description) ---
+    // --- テロップ結合 (v11.7) ---
     document.getElementById('telop-convert-btn').addEventListener('click', async () => {
         const fileInput = document.getElementById('telop-uploader');
         const resultArea = document.getElementById('telop-result-area');
