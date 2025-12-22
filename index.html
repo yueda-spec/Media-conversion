@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>メディア変換ツール v11.5</title>
+    <title>メディア変換ツール v11.6</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
     
     <style>
@@ -36,7 +36,7 @@
 <body>
 
 <div class="main-container">
-    <h3 class="mb-4 text-center fw-bold text-dark">メディア変換ツール v11.5</h3>
+    <h3 class="mb-4 text-center fw-bold text-dark">メディア変換ツール v11.6</h3>
     
     <div id="engine-status" class="alert alert-danger py-2 text-center small"></div>
     
@@ -51,7 +51,7 @@
             <button class="nav-link" id="video-tab" data-bs-toggle="tab" data-bs-target="#video-pane" type="button">🎥 動画変換</button>
         </li>
         <li class="nav-item">
-            <button class="nav-link" id="telop-tab" data-bs-toggle="tab" data-bs-target="#telop-pane" type="button">🎞️ テロップ結合</button>
+            <button class="nav-link" id="telop-tab" data-bs-toggle="tab" data-bs-target="#telop-pane" type="button">🎞️ テロップ結合＆AIチェック</button>
         </li>
     </ul>
 
@@ -124,7 +124,17 @@
         </div>
 
         <div class="tab-pane fade" id="telop-pane">
-            <div class="alert alert-primary py-2"><small><strong>🤖 AIチェックモード:</strong> 各画像を1秒ずつ表示し、上部にファイル名を印字します。</small></div>
+            
+            <div class="alert alert-primary py-3 mb-4">
+                <div class="d-flex align-items-center mb-1">
+                    <span class="fs-4 me-2">🤖</span>
+                    <h6 class="alert-heading fw-bold mb-0">テロップ動画変換 ＆ AI一括チェック</h6>
+                </div>
+                <p class="mb-0 ms-1 small">
+                    複数のテロップ画像（PNG/JPG）を読み込んで1本の動画ファイルに結合します。<br>
+                    その動画をAI（Gemini）に読み込ませることで、<strong>誤字脱字や固有名詞の誤りを自動で一括チェック</strong>できます。
+                </p>
+            </div>
             
             <div class="mb-3">
                 <label class="form-label fw-bold">1. テロップ画像選択 (PNG/JPG)</label>
@@ -374,7 +384,7 @@
     document.getElementById('pdf-single-btn').onclick = function() { if (convertedPdfs.length > 0) saveAs(convertedPdfs[0].blob, convertedPdfs[0].name); };
     document.getElementById('pdf-zip-btn').onclick = function() { const zip = new JSZip(); convertedPdfs.forEach(f => zip.file(f.name, f.blob)); zip.generateAsync({type:"blob"}).then(c => saveAs(c, "pdf_converted.zip")); };
 
-    // --- テロップ結合 (v11.5: 1.0sec Fixed + Gray BG + Disclaimer) ---
+    // --- テロップ結合 (v11.6: 1.0sec + Gray BG + Disclaimer + New Tab Name & Description) ---
     document.getElementById('telop-convert-btn').addEventListener('click', async () => {
         const fileInput = document.getElementById('telop-uploader');
         const resultArea = document.getElementById('telop-result-area');
