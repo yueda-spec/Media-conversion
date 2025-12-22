@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>メディア変換ツール v11.1</title>
+    <title>メディア変換ツール v11.2</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
     
     <style>
@@ -36,7 +36,7 @@
 <body>
 
 <div class="main-container">
-    <h3 class="mb-4 text-center fw-bold text-dark">メディア変換ツール v11.1</h3>
+    <h3 class="mb-4 text-center fw-bold text-dark">メディア変換ツール v11.2</h3>
     
     <div id="engine-status" class="alert alert-danger py-2 text-center small"></div>
     
@@ -124,7 +124,7 @@
         </div>
 
         <div class="tab-pane fade" id="telop-pane">
-            <div class="alert alert-primary py-2"><small><strong>🤖 AIチェックモード:</strong> 各画像を0.5秒ずつ表示し、上部にファイル名を印字します。</small></div>
+            <div class="alert alert-primary py-2"><small><strong>🤖 AIチェックモード:</strong> 黒・白文字両対応のため、背景をグレーにして動画化します。</small></div>
             
             <div class="mb-3">
                 <label class="form-label fw-bold">1. テロップ画像選択 (PNG/JPG)</label>
@@ -374,7 +374,7 @@
     document.getElementById('pdf-single-btn').onclick = function() { if (convertedPdfs.length > 0) saveAs(convertedPdfs[0].blob, convertedPdfs[0].name); };
     document.getElementById('pdf-zip-btn').onclick = function() { const zip = new JSZip(); convertedPdfs.forEach(f => zip.file(f.name, f.blob)); zip.generateAsync({type:"blob"}).then(c => saveAs(c, "pdf_converted.zip")); };
 
-    // --- テロップ結合 (v11.1: Gem Link Added) ---
+    // --- テロップ結合 (v11.2: Gray Background Fix) ---
     document.getElementById('telop-convert-btn').addEventListener('click', async () => {
         const fileInput = document.getElementById('telop-uploader');
         const resultArea = document.getElementById('telop-result-area');
@@ -398,12 +398,19 @@
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
                 canvas.width = imgBitmap.width; canvas.height = imgBitmap.height;
+                
+                // ★ 背景色をグレーに設定 (黒文字・白文字の両対応) ★
+                ctx.fillStyle = '#888888'; 
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
                 ctx.drawImage(imgBitmap, 0, 0);
+                
                 const fontSize = Math.max(24, Math.floor(canvas.height * 0.05));
                 ctx.font = `bold ${fontSize}px Arial, sans-serif`; ctx.textBaseline = 'top';
                 const headerHeight = Math.floor(fontSize * 1.5);
                 ctx.fillStyle = 'rgba(0, 0, 0, 0.7)'; ctx.fillRect(0, 0, canvas.width, headerHeight);
                 ctx.fillStyle = '#ffffff'; ctx.fillText(`File: ${files[i].name}`, 10, (headerHeight - fontSize) / 2);
+                
                 const blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.95));
                 ffmpeg.FS('writeFile', `img${String(i).padStart(3, '0')}.jpg`, await fetchFile(blob));
             }
@@ -412,7 +419,6 @@
             progressBar.style.width = '100%'; progressBar.innerText = '完了';
             const data = ffmpeg.FS('readFile', 'output_check.mp4'); const blob = new Blob([data.buffer], { type: 'video/mp4' }); const url = URL.createObjectURL(blob);
             
-            // UI with Gem Link
             resultArea.innerHTML = `
                 <div class="alert alert-success fw-bold">✨ チェック用動画完成 (0.5秒/枚)</div>
                 <video src="${url}" controls class="w-100 mb-3" style="max-height: 300px; background:#000;"></video>
