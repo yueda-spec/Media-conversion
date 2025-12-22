@@ -3,12 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>マルチメディア一括変換ツール v8.1</title>
+    <title>マルチメディア一括変換ツール v8.2 (Dual Engine)</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     
     <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
     
-    <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
+    <script src="https://unpkg.com/heic2any@0.0.4/dist/heic2any.min.js"></script>
+    
+    <script src="https://unpkg.com/heic-to@1.3.0/dist/iife/heic-to.min.js"></script>
     
     <script type="module">
         import * as pdfjsLib from 'https://unpkg.com/pdfjs-dist@4.3.136/build/pdf.min.mjs';
@@ -28,16 +30,15 @@
         .mode-card { border: 2px solid #e9ecef; padding: 15px; margin-bottom: 12px; border-radius: 10px; cursor: pointer; transition: all 0.2s; }
         .mode-card:hover { background-color: #f8f9fa; border-color: #dee2e6; }
         .mode-card.selected { border-color: #0d6efd; background-color: #f0f7ff; }
-        
         .result-item { background: #fff; border-bottom: 1px solid #eee; padding: 10px; display: flex; justify-content: space-between; align-items: center; }
         .result-item:last-child { border-bottom: none; }
         
-        /* バッジ類 */
         .status-badge { font-size: 0.85rem; padding: 5px 12px; border-radius: 20px; min-width: 100px; text-align: center; display: inline-block; font-weight: bold;}
         .status-waiting { background: #eee; color: #666; }
         .status-processing { background: #cfe2ff; color: #084298; }
         .status-success { background: #d1e7dd; color: #0f5132; }
         .status-error { background: #f8d7da; color: #842029; }
+        .status-retry { background: #fff3cd; color: #856404; } /* 再試行中 */
         
         /* 警告バッジ */
         .tag-warning { font-size: 0.75rem; padding: 3px 8px; border-radius: 4px; background: #fff3cd; color: #856404; border: 1px solid #ffeeba; margin-left: 10px; font-weight: bold; }
@@ -53,7 +54,7 @@
 <body>
 
 <div class="main-container">
-    <h3 class="mb-4 text-center fw-bold text-dark">マルチメディア一括変換ツール v8.1</h3>
+    <h3 class="mb-4 text-center fw-bold text-dark">マルチメディア一括変換ツール v8.2</h3>
     
     <ul class="nav nav-pills nav-fill mb-4" id="myTab" role="tablist">
         <li class="nav-item">
@@ -242,7 +243,6 @@
             const name = file.name.toUpperCase();
             const ext = name.split('.').pop();
 
-            // 1. 防犯カメラ系チェック
             const dvrExts = ['DAV', 'H264', '264', 'DAT', 'VOB'];
             let isLegacy = dvrExts.includes(ext);
 
@@ -257,7 +257,6 @@
                 tags.push({ text: '⚠️ MP4再変換モード推奨', type: 'warning' });
             }
 
-            // 2. HEVCチェック
             if (ext === 'MP4' || ext === 'MOV') {
                 try {
                     const isHevc = await checkHevcBinary(file);
@@ -444,7 +443,7 @@
         zip.generateAsync({type:"blob"}).then(c => saveAs(c, "video_converted.zip"));
     };
 
-    // --- 2. 写真変換 (heic2any - JSDelivr) ---
+    // --- 2. 写真変換 (Dual Engine: heic2any -> heic-to) ---
     document.getElementById('photo-convert-btn').addEventListener('click', async () => {
         const fileInput = document.getElementById('photo-uploader');
         const btn = document.getElementById('photo-convert-btn');
@@ -461,18 +460,35 @@
 
         for (let i = 0; i < files.length; i++) {
             const rowId = `p-row-${i}`;
-            updateResultRow(rowId, '変換中...', 'status-processing');
+            const file = files[i];
+            updateResultRow(rowId, '変換中(1)...', 'status-processing');
+            
             try {
-                // heic2any
-                const resultBlob = await heic2any({ blob: files[i], toType: "image/jpeg", quality: 0.9 });
+                // --- 1st Try: heic2any ---
+                const resultBlob = await heic2any({ blob: file, toType: "image/jpeg", quality: 0.9 });
                 const finalBlob = Array.isArray(resultBlob) ? resultBlob[0] : resultBlob;
-                const newName = files[i].name.replace(/\.[^/.]+$/, "") + ".jpg";
+                const newName = file.name.replace(/\.[^/.]+$/, "") + ".jpg";
                 convertedPhotos.push({ name: newName, blob: finalBlob });
                 updateResultRow(rowId, '完了', 'status-success');
-            } catch (e) {
-                console.error(e);
-                const errorMsg = e.message ? e.message.substring(0, 20) : "変換失敗";
-                updateResultRow(rowId, `失敗: ${errorMsg}`, 'status-error');
+                
+            } catch (err1) {
+                console.warn("heic2any failed, trying heic-to...", err1);
+                updateResultRow(rowId, '救済中(2)...', 'status-retry');
+                
+                try {
+                    // --- 2nd Try: heic-to ---
+                    const convertFunc = window.heicTo || window.HeicTo;
+                    if (!convertFunc) throw new Error("サブエンジン未ロード");
+                    
+                    const blob = await convertFunc({ blob: file, type: "image/jpeg", quality: 0.9 });
+                    const newName = file.name.replace(/\.[^/.]+$/, "") + ".jpg";
+                    convertedPhotos.push({ name: newName, blob: blob });
+                    updateResultRow(rowId, '完了(救済)', 'status-success');
+                    
+                } catch (err2) {
+                    console.error("All engines failed", err2);
+                    updateResultRow(rowId, '変換失敗', 'status-error');
+                }
             }
         }
         btn.disabled = false;
