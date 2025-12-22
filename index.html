@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>メディア変換ツール v11.0 (AI Check)</title>
+    <title>メディア変換ツール v11.1</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
     
     <style>
@@ -36,7 +36,7 @@
 <body>
 
 <div class="main-container">
-    <h3 class="mb-4 text-center fw-bold text-dark">メディア変換ツール v11.0</h3>
+    <h3 class="mb-4 text-center fw-bold text-dark">メディア変換ツール v11.1</h3>
     
     <div id="engine-status" class="alert alert-danger py-2 text-center small"></div>
     
@@ -374,7 +374,7 @@
     document.getElementById('pdf-single-btn').onclick = function() { if (convertedPdfs.length > 0) saveAs(convertedPdfs[0].blob, convertedPdfs[0].name); };
     document.getElementById('pdf-zip-btn').onclick = function() { const zip = new JSZip(); convertedPdfs.forEach(f => zip.file(f.name, f.blob)); zip.generateAsync({type:"blob"}).then(c => saveAs(c, "pdf_converted.zip")); };
 
-    // --- テロップ結合 (v11.0: AI Check Mode with Drawtext) ---
+    // --- テロップ結合 (v11.1: Gem Link Added) ---
     document.getElementById('telop-convert-btn').addEventListener('click', async () => {
         const fileInput = document.getElementById('telop-uploader');
         const resultArea = document.getElementById('telop-result-area');
@@ -390,85 +390,48 @@
         
         try {
             await ensureFFmpegLoaded();
-            
-            // 1. ソート
             const files = Array.from(fileInput.files).sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
-            
-            // 2. 画像加工 (Canvasでファイル名書き込み)
             for (let i = 0; i < files.length; i++) {
-                // 進捗更新
-                const p = Math.round((i / files.length) * 50); // 前半50%
+                const p = Math.round((i / files.length) * 50);
                 progressBar.style.width = `${p}%`; progressBar.innerText = `加工中 ${p}%`;
-
-                // 画像読み込み
                 const imgBitmap = await createImageBitmap(files[i]);
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
-                
-                // キャンバスサイズ設定
-                canvas.width = imgBitmap.width;
-                canvas.height = imgBitmap.height;
-                
-                // 画像描画
+                canvas.width = imgBitmap.width; canvas.height = imgBitmap.height;
                 ctx.drawImage(imgBitmap, 0, 0);
-                
-                // --- ファイル名描画処理 ---
-                const fontSize = Math.max(24, Math.floor(canvas.height * 0.05)); // 高さの5%程度のフォントサイズ
-                ctx.font = `bold ${fontSize}px Arial, sans-serif`;
-                ctx.textBaseline = 'top';
-                
-                // 背景帯 (黒半透明)
+                const fontSize = Math.max(24, Math.floor(canvas.height * 0.05));
+                ctx.font = `bold ${fontSize}px Arial, sans-serif`; ctx.textBaseline = 'top';
                 const headerHeight = Math.floor(fontSize * 1.5);
-                ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-                ctx.fillRect(0, 0, canvas.width, headerHeight);
-                
-                // 文字色 (白)
-                ctx.fillStyle = '#ffffff';
-                ctx.fillText(`File: ${files[i].name}`, 10, (headerHeight - fontSize) / 2);
-                // -------------------------
-
-                // Blob化 -> FFmpegへ
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.7)'; ctx.fillRect(0, 0, canvas.width, headerHeight);
+                ctx.fillStyle = '#ffffff'; ctx.fillText(`File: ${files[i].name}`, 10, (headerHeight - fontSize) / 2);
                 const blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.95));
-                const newName = `img${String(i).padStart(3, '0')}.jpg`;
-                ffmpeg.FS('writeFile', newName, await fetchFile(blob));
+                ffmpeg.FS('writeFile', `img${String(i).padStart(3, '0')}.jpg`, await fetchFile(blob));
             }
-
-            // 3. 動画変換
             progressBar.style.width = '75%'; progressBar.innerText = 'エンコード中...';
-            
-            // -framerate 2 (0.5秒/枚)
-            // -crf 28 (AI認識には十分な画質かつ軽量)
-            await ffmpeg.run(
-                '-framerate', '2', 
-                '-i', 'img%03d.jpg', 
-                '-c:v', 'libx264', 
-                '-pix_fmt', 'yuv420p', 
-                '-crf', '28', 
-                'output_check.mp4'
-            );
-
+            await ffmpeg.run('-framerate', '2', '-i', 'img%03d.jpg', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-crf', '28', 'output_check.mp4');
             progressBar.style.width = '100%'; progressBar.innerText = '完了';
-
-            const data = ffmpeg.FS('readFile', 'output_check.mp4');
-            const blob = new Blob([data.buffer], { type: 'video/mp4' });
-            const url = URL.createObjectURL(blob);
+            const data = ffmpeg.FS('readFile', 'output_check.mp4'); const blob = new Blob([data.buffer], { type: 'video/mp4' }); const url = URL.createObjectURL(blob);
             
+            // UI with Gem Link
             resultArea.innerHTML = `
                 <div class="alert alert-success fw-bold">✨ チェック用動画完成 (0.5秒/枚)</div>
                 <video src="${url}" controls class="w-100 mb-3" style="max-height: 300px; background:#000;"></video>
-                <a href="${url}" download="telop_check_ai.mp4" class="btn btn-success fw-bold px-5">⬇ 保存</a>
+                <div class="mb-4">
+                    <a href="${url}" download="telop_check_ai.mp4" class="btn btn-success fw-bold px-5">⬇ 保存</a>
+                </div>
+                <div class="card border-info">
+                    <div class="card-header bg-info text-white fw-bold">🚀 次のステップ: AIで校正チェック</div>
+                    <div class="card-body bg-light">
+                        <p class="small text-muted mb-2">保存した動画をGeminiにアップロードして、誤字脱字や固有名詞のチェックを行いましょう。</p>
+                        <a href="https://gemini.google.com/gem/1dN_UBLXFguu4dfD4ZUWab1FV2mc5Jupv?usp=sharing" target="_blank" class="btn btn-outline-primary w-100 fw-bold">🤖 校閲Geminiを開く</a>
+                        <div class="mt-2 text-start small text-muted"><strong>使い方:</strong><br>1. 上のボタンからGeminiを開く<br>2. さきほど保存した動画を添付<br>3. 放送日(例: 20240101)を入力して送信</div>
+                    </div>
+                </div>
             `;
-
-            // 掃除
-            for (let i = 0; i < files.length; i++) {
-                try { ffmpeg.FS('unlink', `img${String(i).padStart(3, '0')}.jpg`); } catch(e){}
-            }
+            
+            for (let i = 0; i < files.length; i++) { try { ffmpeg.FS('unlink', `img${String(i).padStart(3, '0')}.jpg`); } catch(e){} }
             try { ffmpeg.FS('unlink', 'output_check.mp4'); } catch(e){}
-
-        } catch(e) {
-            console.error(e);
-            resultArea.innerHTML = `<div class="alert alert-danger">エラーが発生しました: ${e.message}</div>`;
-        }
+        } catch(e) { console.error(e); resultArea.innerHTML = `<div class="alert alert-danger">エラーが発生しました: ${e.message}</div>`; }
         btn.disabled = false; btn.innerText = "動画を作成 (MP4)";
     });
 </script>
